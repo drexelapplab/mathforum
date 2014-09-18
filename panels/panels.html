@@ -1,0 +1,1074 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, minimal-ui" />
+		<style>
+			*
+			{
+				padding: 0;
+				margin: 0;
+				border: 0;
+			}
+
+			body
+			{
+				overflow: hidden;
+			}
+
+			#container
+			{
+				background-color: red;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.1.0.min.js"></script>
+		<script src="shapes.js"></script>
+		<script defer="defer">
+			//********************************************************************************************//
+			//Data Storage
+			//********************************************************************************************//
+
+			var oldScreenX;
+			var oldScreenY;
+			var boundY;
+
+			var scaling;
+			var stage;
+			var layer;
+			var GUIField;
+
+			var problemTextBar;
+			var problemTextBarContent;
+			var problemTextField;
+			var problemTextFieldContent;
+			var problemTextPanelShown = true;
+
+			var problemModeField;
+			var problemModeFieldContent;
+
+			var containerPanel;
+
+			var rackPanel;
+
+			var modeSelector;
+
+			var YourNumberPanels = [];
+			var YourNumberTexts = [];
+
+			var YourGridPanels = [];
+			var YourGridTexts = [];
+
+			var YourRack = [];
+			var YourGrid = [];
+
+			var YourSnapPoints = [];
+			var YourPanelLocs = [];
+
+			var rowSum;
+			var colSum;
+
+			var tagged = false;
+
+			//********************************************************************************************//
+			//Drawing Methods
+			//********************************************************************************************//
+
+			function initDrawAll()
+			{
+				// Data Storage
+				modeSelector = 1;
+
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				boundY = (window.innerHeight) - 30;
+
+				scaling = Math.min(oldScreenX, boundY);
+				
+				drawGUI();
+
+				generateContainer();
+
+				drawProblemText();
+				drawCounterText();
+				drawProblemMode();
+
+				generateRack();
+				generateGrid();
+
+				generateSnapPoints();
+
+				generatePanelSetPartial();
+
+				restructureRackPanels();
+				restructureGridPanels();
+
+				generateStage();
+
+				updateSums();
+
+				layer.draw();
+			}
+
+			function reDrawAll()
+			{
+				// Data Storage
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				boundY = (window.innerHeight) - 30;
+
+				scaling = Math.min(oldScreenX, boundY);
+				
+				stage.setX(0);
+				stage.setY(0);
+
+				stage.setWidth(oldScreenX);
+				stage.setHeight(oldScreenY);
+
+				layer.setX(0);
+				layer.setY(0);
+
+				layer.setWidth(oldScreenX);
+				layer.setHeight(oldScreenY);
+
+				GUIField.setX(0);
+				GUIField.setY(0);
+
+				GUIField.setWidth(oldScreenX);
+				GUIField.setHeight(oldScreenY);
+
+				containerPanel.setX(oldScreenX * 0.005);
+				containerPanel.setY(boundY * 0.005);
+				containerPanel.setWidth(oldScreenX * 0.79);
+				containerPanel.setHeight(boundY * 0.79);
+
+				problemTextPanel.setX(0);
+
+				if (problemTextPanelShown == false)
+				{ problemTextPanel.setY(oldScreenY - 30); }
+				else
+				{ problemTextPanel.setY(0); }
+
+				problemTextBar.setWidth(oldScreenX);
+				problemTextBarContent.setWidth(oldScreenX - 5);
+				problemTextField.setWidth(oldScreenX);
+				problemTextField.setHeight(oldScreenY - 30);
+				problemTextFieldContent.setWidth(oldScreenX - 50);
+				problemTextFieldContent.setHeight(oldScreenY - 55);
+
+				counterTextRowFieldContent.setX(oldScreenX * 0.65);
+				counterTextRowFieldContent.setY(boundY * 0.35);
+				counterTextRowFieldContent.setWidth(oldScreenX * 0.15);
+				counterTextRowFieldContent.setFontSize(scaling * 0.05);
+				counterTextColFieldContent.setX(0);
+				counterTextColFieldContent.setY(boundY * 0.675);
+				counterTextColFieldContent.setWidth(oldScreenX * 0.8);
+				counterTextColFieldContent.setFontSize(scaling * 0.05);
+
+				problemModeField.setX(-10);
+				problemModeField.setY(-10);
+				problemModeField.setWidth((oldScreenX * 0.25) + 10);
+				problemModeField.setHeight(60);
+				problemModeFieldContent.setWidth(oldScreenX * 0.25);
+
+				if (modeSelector == 1)
+				{
+					problemModeField.setFillLinearGradientColorStops([0, '#F2DF8A', 1, '#B0AA63']);
+					problemModeFieldContent.setText('Partial Mode');
+				}
+				else
+				{
+					problemModeField.setFillLinearGradientColorStops([0, '#9BF28A', 1, '#6FB063']);
+					problemModeFieldContent.setText('Free Mode');
+				}
+
+				generateSnapPoints(YourSnapPoints);
+
+				restructureRack();
+				restructureGrid();
+
+				restructureRackPanels();
+				restructureGridPanels();
+
+				updateSums();
+
+				stage.draw();
+				layer.draw();
+			}
+
+			function drawProblemText()
+			{
+				// Create problemText Bar
+				problemTextBar = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: oldScreenX,
+					height: 30,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0,y:30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextBarContent = new Kinetic.Text({
+					x: 5,
+					y: 5,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					text: 'Tap here to view problem',
+					fill: 'white',
+					width: oldScreenX - 5,
+					align: 'center'
+				});
+
+				// Create problemText Field
+				problemTextField = new Kinetic.Rect({
+					x: 0,
+					y: 30,
+					width: oldScreenX,
+					height: oldScreenY - 30,
+					fillLinearGradientStartPoint: {x:0, y:30},
+					fillLinearGradientEndPoint: {x:0,y:oldScreenY - 30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextFieldContent = new Kinetic.Text({
+					x: 25,
+					y: 55,
+					width: oldScreenX - 50,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					lineHeight: 1.2,
+					text: '"Chelsea\'s Number Puzzle [Problem #4603]"\n\nChelsea is working on a number puzzle. She is trying to place the numbers 1 through 9 in the squares, using each number exactly once, so that the sum of the numbers in the horizontal row is equal to the sum of the numbers in the vertical column.\n\nSo far Chelsea has filled in three numbers.\n\n    -  Find all the numbers she can use in the center square (C) to solve the puzzle.\n    -  Explain how you found them and how you know you have found them all.\n    -  List the numbers for the square labeled f that will go with each solution for square C.\n\nExtra\n    - Starting with a blank puzzle grid and the same rules, what is the minimum possible sum of the row and column? What is the maximum possible sum of the row and column? Describe or show a possible puzzle solution for each.',
+					fill: 'white'
+				});
+
+				if (problemTextPanelShown == false)
+				{
+					// Create problemText Panel Grouping
+					problemTextPanel = new Kinetic.Group({
+						x: 0,
+						y: oldScreenY - 30
+					});
+				}
+				else
+				{
+					// Create problemText Panel Grouping
+					problemTextPanel = new Kinetic.Group({
+						x: 0,
+						y: 0
+					});
+				}
+
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
+				problemTextPanel.add(problemTextField);
+				problemTextPanel.add(problemTextFieldContent);
+
+				problemTextPanel.on("touchstart", function() {
+					toggleProblemText();
+				});
+
+				problemTextPanel.on("mousedown", function() {
+					toggleProblemText();
+				});
+			}
+
+			function drawProblemMode()
+			{
+				if (modeSelector == 1)
+				{
+					problemModeField = new Kinetic.Rect({
+						x: -10,
+						y: -10,
+						width: (oldScreenX * 0.25) + 10,
+						height: 60,
+						cornerRadius: 12,
+						fillLinearGradientStartPoint: {x:0, y:0},
+						fillLinearGradientEndPoint: {x:0, y:30},
+						fillLinearGradientColorStops: [0, '#F2DF8A', 1, '#B0AA63'],
+						stroke: 'black',
+						strokeWidth: 2
+					});
+
+					problemModeFieldContent = new Kinetic.Text({
+						x: 0,
+						y: 16,
+						width: (oldScreenX * 0.25),
+						fontFamily: 'Arial',
+						fontSize: 18,
+						lineHeight: 1.2,
+						text: 'Partial Mode',
+						align: 'center',
+						fill: 'white'
+					});
+				}
+				else
+				{
+					problemModeField = new Kinetic.Rect({
+						x: -10,
+						y: -10,
+						width: (oldScreenX * 0.25) + 10,
+						height: 60,
+						cornerRadius: 12,
+						fillLinearGradientStartPoint: {x:0, y:0},
+						fillLinearGradientEndPoint: {x:0, y:30},
+						fillLinearGradientColorStops: [0, '#9BF28A', 1, '#6FB063'],
+						stroke: 'black',
+						strokeWidth: 2
+					});
+
+					problemModeFieldContent = new Kinetic.Text({
+						x: 0,
+						y: 16,
+						width: (oldScreenX * 0.25),
+						fontFamily: 'Arial',
+						fontSize: 18,
+						lineHeight: 1.2,
+						text: 'Free Mode',
+						align: 'center',
+						fill: 'white'
+					});
+				}
+
+				// Create problemText Panel Grouping
+				problemModePanel = new Kinetic.Group({
+					x: 0,
+					y: 0
+				});
+
+				problemModePanel.add(problemModeField);
+				problemModePanel.add(problemModeFieldContent);
+
+				problemModePanel.on("touchstart", function() {
+					toggleProblemMode();
+				});
+
+				problemModePanel.on("mousedown", function() {
+					toggleProblemMode();
+				});
+			}
+
+			function drawCounterText()
+			{
+				// Create rowText Field content.
+				counterTextRowFieldContent = new Kinetic.Text({
+					x: (oldScreenX * 0.65),
+					y: (boundY * 0.35),
+					width: (oldScreenX * 0.15),
+					fontFamily: 'Arial',
+					fontSize: (scaling * 0.05),
+					lineHeight: 1.2,
+					text: 'Sum: -',
+					align: 'center',
+					fill: 'white'
+				});
+
+				// Create colText Field content.
+				counterTextColFieldContent = new Kinetic.Text({
+					x: 0,
+					y: (boundY * 0.675),
+					width: (oldScreenX * 0.8),
+					fontFamily: 'Arial',
+					fontSize: (scaling * 0.05),
+					lineHeight: 1.2,
+					text: 'Sum: -',
+					align: 'center',
+					fill: 'white'
+				});
+			}
+
+			function drawGUI()
+			{
+				// Create kinetic stage.
+				stage = new Kinetic.Stage({
+					container: 'container',
+					width: oldScreenX,
+					height: oldScreenY
+				});
+
+				// Create kinetic layer.
+				layer = new Kinetic.Layer();
+
+				// Create GUI Field
+				GUIField = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: oldScreenX,
+					height: oldScreenY,
+					fill: '#545454',
+					stroke: 'black',
+					strokeWidth: 4
+				});
+			}
+
+			//********************************************************************************************//
+			//Creation Methods
+			//********************************************************************************************//
+
+			function generateContainer()
+			{
+				// Create Container Rectangle
+				containerPanel = new Kinetic.Rect({
+					x: (oldScreenX * 0.005),
+					y: (boundY * 0.005),
+					width: oldScreenX * 0.79,
+					height: boundY * 0.79,
+					cornerRadius: 12,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0, y:(boundY * 0.1)},
+					fillLinearGradientColorStops: [0, '#343434', 1, '#242424'],
+					stroke: 'black',
+					strokeWidth: 2,
+				});
+			}
+
+			function generateRack()
+			{
+				if (boundY > oldScreenX)
+				{
+					// Create Rack Rectangle
+					rackPanel = new Kinetic.Rect({
+						x: (oldScreenX * 0.025),
+						y: (boundY * 0.825),
+						width: oldScreenX * 0.95,
+						height: boundY * 0.15,
+						cornerRadius: 12,
+						fillLinearGradientStartPoint: {x:0, y:0},
+						fillLinearGradientEndPoint: {x:0, y:(boundY * 0.1)},
+						fillLinearGradientColorStops: [0, '#343434', 1, '#242424'],
+						stroke: 'black',
+						strokeWidth: 2,
+					});
+				}
+				else
+				{
+					// Create Rack Rectangle
+					rackPanel = new Kinetic.Rect({
+						x: (oldScreenX * 0.825),
+						y: (boundY * 0.025),
+						width: oldScreenX * 0.15,
+						height: boundY * 0.95,
+						cornerRadius: 12,
+						fillLinearGradientStartPoint: {x:0, y:0},
+						fillLinearGradientEndPoint: {x:0, y:(boundY * 0.1)},
+						fillLinearGradientColorStops: [0, '#4A4A4A', 1, '#242424'],
+						stroke: 'black',
+						strokeWidth: 2,
+					});
+				}
+			}
+
+			function generateGrid()
+			{
+				for (var i = 0; i < 9; i++)
+				{ YourGrid.push(-1); }
+
+				generateSpace(oldScreenX * 0.35, boundY * 0.15, "f", false);
+				generateSpace(oldScreenX * 0.35, boundY * 0.25, "g", false);
+				generateSpace(oldScreenX * 0.15, boundY * 0.35, "a", false);
+				generateSpace(oldScreenX * 0.25, boundY * 0.35, "b", false);
+				generateSpace(oldScreenX * 0.35, boundY * 0.35, "C", true);
+				generateSpace(oldScreenX * 0.45, boundY * 0.35, "d", false);
+				generateSpace(oldScreenX * 0.55, boundY * 0.35, "e", false);
+				generateSpace(oldScreenX * 0.35, boundY * 0.45, "h", false);
+				generateSpace(oldScreenX * 0.35, boundY * 0.55, "i", false);
+			}
+
+			function generateSpace(dimensionX, dimensionY, value, center)
+			{
+				// Create Space Rectangle
+				spaceRect = new Kinetic.Rect({
+					x: dimensionX,
+					y: dimensionY,
+					width: oldScreenX * 0.1,
+					height: boundY * 0.1,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0, y:(boundY * 0.1)},
+					fillLinearGradientColorStops: [0, '#4A4A4A', 1, '#242424'],
+					stroke: 'black',
+					strokeWidth: 2,
+				});
+
+				if (center == true)
+				{
+					// Create Space Text Content
+					spaceText = new Kinetic.Text({
+						x: dimensionX + (oldScreenX * 0.01),
+						y: dimensionY + ((boundY * 0.05) - (scaling * 0.04)),
+						fontFamily: 'Arial',
+						fontSize: scaling * 0.08,
+						text: value.toString(),
+						fill: '#FFFFFF',
+						width: oldScreenX * 0.08,
+						align: 'center'
+					});
+				}
+				else
+				{
+					// Create Space Text Content
+					spaceText = new Kinetic.Text({
+						x: dimensionX + (oldScreenX * 0.01),
+						y: dimensionY + ((boundY * 0.02) - (scaling * 0.015)),
+						fontFamily: 'Arial',
+						fontSize: scaling * 0.03,
+						text: value.toString(),
+						fill: '#FFFFFF',
+						width: oldScreenX * 0.03,
+						align: 'center'
+					});
+				}
+
+				YourGridPanels.push(spaceRect);
+				YourGridTexts.push(spaceText);
+			}
+
+			function generateSnapPoints()
+			{
+				YourSnapPoints = [
+					[(oldScreenX * 0.35), (boundY * 0.15)],
+					[(oldScreenX * 0.35), (boundY * 0.25)],
+					[(oldScreenX * 0.15), (boundY * 0.35)],
+					[(oldScreenX * 0.25), (boundY * 0.35)],
+					[(oldScreenX * 0.35), (boundY * 0.35)],
+					[(oldScreenX * 0.45), (boundY * 0.35)],
+					[(oldScreenX * 0.55), (boundY * 0.35)],
+					[(oldScreenX * 0.35), (boundY * 0.45)],
+					[(oldScreenX * 0.35), (boundY * 0.55)]
+				];
+			}
+
+			function generatePanelSetPartial()
+			{
+				for (var i = 1; i < 10; i++)
+				{ generatePanel(i); }
+
+				for (var i = 0; i < 9; i++)
+				{ YourPanelLocs.push(-1); }
+
+				addPanelToRack(1);
+				addPanelToRack(2);
+				addPanelToRack(3);
+				addPanelToGrid(4, 1);
+				addPanelToRack(5);
+				addPanelToRack(6);
+				addPanelToGrid(7, 9);
+				addPanelToGrid(8, 2);
+				addPanelToRack(9);
+
+				for (var i = 0; i < 9; i++)
+				{ generateEvents(i+1); }
+
+				rowSum = 0;
+				colSum = 19;
+			}
+
+			function generatePanelSetEmpty()
+			{
+				for (var i = 1; i < 10; i++)
+				{ generatePanel(YourNumberPanels, i); }
+
+				for (var i = 0; i < 9; i++)
+				{ YourPanelLocs.push(-1); }
+
+				for (var i = 0; i < 9; i++)
+				{ addPanelToRack(YourNumberPanels[i], (i+1)); }
+
+				for (var i = 0; i < 9; i++)
+				{ generateEvents(YourNumberPanels[i], (i+1)); }
+			}
+
+			function generatePanel(value)
+			{
+				// Create Panel Rectangle
+				panelRect = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: oldScreenX * 0.1,
+					height: boundY * 0.1,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0, y:(boundY * 0.1)},
+					fillLinearGradientColorStops: [0, '#FFFFFF', 1, '#FFFFEB'],
+					stroke: 'black',
+					strokeWidth: 2,
+					draggable: true
+				});
+
+				// Create Panel Text
+				panelText = new Kinetic.Text({
+					x: (oldScreenX * 0.01),
+					y: ((boundY * 0.05) - (scaling * 0.04)),
+					fontFamily: 'Arial',
+					fontSize: scaling * 0.08,
+					text: value.toString(),
+					fill: '#2969FF',
+					width: oldScreenX * 0.08,
+					align: 'center',
+					listening: false
+				});
+
+				YourNumberPanels.push(panelRect);
+				YourNumberTexts.push(panelText);
+			}
+
+			function generateEvents(number)
+			{
+				YourNumberPanels[number - 1].on("dragmove", function() {
+					chaseMove(number);
+				});
+
+				YourNumberPanels[number - 1].on("dragend", function() {
+					if (tagged == true)
+					{
+						tagged = false;
+
+						finalizeMove(number);
+						restructureRackPanels();
+						restructureGridPanels();
+						updateSums();
+						layer.draw();
+					}
+				});
+
+				YourNumberPanels[number - 1].on("dragstart", function() {
+					if (tagged == false)
+					{
+						tagged = true;
+
+						YourNumberPanels[number - 1].moveToTop();
+						YourNumberTexts[number - 1].moveToTop();
+						problemTextPanel.moveToTop();
+
+						removePanelFromRack(number);
+						removePanelFromGrid(number);
+						restructureRackPanels();
+						layer.draw();
+					}
+				});
+			}
+
+			function generateStage()
+			{
+				layer.add(GUIField);
+
+				layer.add(containerPanel);
+
+				layer.add(counterTextRowFieldContent);
+				layer.add(counterTextColFieldContent);
+				layer.add(rackPanel);
+
+				for (var i = 0; i < YourGridPanels.length; i++)
+				{ layer.add(YourGridPanels[i]); }
+
+				for (var i = 0; i < YourGridTexts.length; i++)
+				{ layer.add(YourGridTexts[i]); }
+
+				for (var i = 0; i < YourNumberPanels.length; i++)
+				{ layer.add(YourNumberPanels[i]); }
+
+				for (var i = 0; i < YourNumberTexts.length; i++)
+				{ layer.add(YourNumberTexts[i]); }
+
+				layer.add(problemModePanel);
+				layer.add(problemTextPanel);
+
+				stage.add(layer);
+			}
+
+			//********************************************************************************************//
+			//Control Accessors
+			//********************************************************************************************//
+
+			//********************************************************************************************//
+			//Control Mutators
+			//********************************************************************************************//
+
+			function addPanelToRack(number)
+			{
+				//alert("Added to rack!");
+				if (boundY > oldScreenX)
+				{
+					YourNumberPanels[number - 1].setX((oldScreenX * 0.05) + (oldScreenX * 0.1 * YourRack.length));
+					YourNumberPanels[number - 1].setY(boundY * 0.85);
+				}
+				else
+				{
+					YourNumberPanels[number - 1].setX(oldScreenX * 0.85);
+					YourNumberPanels[number - 1].setY((boundY * 0.05) + (boundY * 0.1 * YourRack.length));
+				}
+				YourPanelLocs[number - 1] = 0;
+				YourRack.push(number);
+			}
+
+			function removePanelFromRack(number)
+			{
+				//alert("Removed from rack!");
+				var i = 0;
+				while (i < YourRack.length)
+				{
+					if (YourRack[i] == number)
+					{
+						YourRack.splice(i, 1);
+						i = 0;
+					}
+					else
+					{ i++; }
+				}
+			}
+
+			function restructureRack()
+			{
+				if (boundY > oldScreenX)
+				{
+					rackPanel.setX(oldScreenX * 0.025);
+					rackPanel.setY(boundY * 0.825);
+					rackPanel.setWidth(oldScreenX * 0.95);
+					rackPanel.setHeight(boundY * 0.15);
+					rackPanel.setFillLinearGradientColorStops([0, '#343434', 1, '#242424']);
+				}
+				else
+				{
+					rackPanel.setX(oldScreenX * 0.825);
+					rackPanel.setY(boundY * 0.025);
+					rackPanel.setWidth(oldScreenX * 0.15);
+					rackPanel.setHeight(boundY * 0.95);
+					rackPanel.setFillLinearGradientColorStops([0, '#4A4A4A', 1, '#242424']);
+				}
+			}
+
+			function restructureRackPanels()
+			{
+				for (var i = 0; i < YourRack.length; i++)
+				{
+					if (boundY > oldScreenX)
+					{
+						YourNumberPanels[YourRack[i]-1].setX((oldScreenX * 0.05) + (oldScreenX * 0.1 * i));
+						YourNumberPanels[YourRack[i]-1].setY(boundY * 0.85);
+
+						YourNumberTexts[YourRack[i]-1].setX((oldScreenX * 0.05) + (oldScreenX * 0.1 * i) + (oldScreenX * 0.01));
+						YourNumberTexts[YourRack[i]-1].setY((boundY * 0.85) + ((boundY * 0.05) - (scaling * 0.04)));
+					}
+					else
+					{
+						YourNumberPanels[YourRack[i]-1].setX(oldScreenX * 0.85);
+						YourNumberPanels[YourRack[i]-1].setY((boundY * 0.05) + (boundY * 0.1 * i));
+
+						YourNumberTexts[YourRack[i]-1].setX((oldScreenX * 0.85) + (oldScreenX * 0.01));
+						YourNumberTexts[YourRack[i]-1].setY((boundY * 0.05) + (boundY * 0.1 * i) + ((boundY * 0.05) - (scaling * 0.04)));
+					}
+
+					YourNumberPanels[YourRack[i]-1].setWidth(oldScreenX * 0.1);
+					YourNumberPanels[YourRack[i]-1].setHeight(boundY * 0.1);
+
+					YourNumberTexts[YourRack[i]-1].setWidth(oldScreenX * 0.08);
+					YourNumberTexts[YourRack[i]-1].setFontSize(scaling * 0.08);
+				}
+			}
+
+			function addPanelToGrid(number, location)
+			{
+				point = YourSnapPoints[location - 1];
+				YourNumberPanels[number - 1].setX(point[0]);
+				YourNumberPanels[number - 1].setY(point[1]);
+
+				if (YourGrid[location - 1] != -1)
+				{
+					if (YourPanelLocs[number - 1] == 0)
+					{
+						addPanelToRack(YourGrid[location - 1]);
+					}
+					else
+					{
+						var loc = YourPanelLocs[number - 1];
+						YourPanelLocs[number - 1] = -1;
+						addPanelToGrid(YourGrid[location - 1], loc);
+					}
+				}
+
+				YourPanelLocs[number - 1] = location;
+				YourGrid[location - 1] = number;
+			}
+
+			function removePanelFromGrid(number)
+			{
+				//alert("Removed from grid!");
+				for (var i = 0; i < YourGrid.length; i++)
+				{
+					if (YourGrid[i] == number)
+					{
+						YourGrid[i] = -1;
+					}
+				}
+			}
+
+			function restructureGrid()
+			{
+				YourGridPanels[0].setX(oldScreenX * 0.35);
+				YourGridPanels[0].setY(boundY * 0.15);
+
+				YourGridPanels[1].setX(oldScreenX * 0.35);
+				YourGridPanels[1].setY(boundY * 0.25);
+
+				YourGridPanels[2].setX(oldScreenX * 0.15);
+				YourGridPanels[2].setY(boundY * 0.35);
+
+				YourGridPanels[3].setX(oldScreenX * 0.25);
+				YourGridPanels[3].setY(boundY * 0.35);
+
+				YourGridPanels[4].setX(oldScreenX * 0.35);
+				YourGridPanels[4].setY(boundY * 0.35);
+
+				YourGridPanels[5].setX(oldScreenX * 0.45);
+				YourGridPanels[5].setY(boundY * 0.35);
+
+				YourGridPanels[6].setX(oldScreenX * 0.55);
+				YourGridPanels[6].setY(boundY * 0.35);
+
+				YourGridPanels[7].setX(oldScreenX * 0.35);
+				YourGridPanels[7].setY(boundY * 0.45);
+
+				YourGridPanels[8].setX(oldScreenX * 0.35);
+				YourGridPanels[8].setY(boundY * 0.55);
+
+
+				for (var i = 0; i < YourGridPanels.length; i++)
+				{
+					YourGridPanels[i].setWidth(oldScreenX * 0.1);
+					YourGridPanels[i].setHeight(boundY * 0.1);
+				}
+
+				YourGridTexts[0].setX((oldScreenX * 0.35) + (oldScreenX * 0.01));
+				YourGridTexts[0].setY((boundY * 0.15) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[0].setHeight(oldScreenX * 0.03);
+				YourGridTexts[0].setFontSize(scaling * 0.03);
+
+				YourGridTexts[1].setX((oldScreenX * 0.35) + (oldScreenX * 0.01));
+				YourGridTexts[1].setY((boundY * 0.25) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[1].setHeight(oldScreenX * 0.03);
+				YourGridTexts[1].setFontSize(scaling * 0.03);
+
+				YourGridTexts[2].setX((oldScreenX * 0.15) + (oldScreenX * 0.01));
+				YourGridTexts[2].setY((boundY * 0.35) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[2].setHeight(oldScreenX * 0.03);
+				YourGridTexts[2].setFontSize(scaling * 0.03);
+
+				YourGridTexts[3].setX((oldScreenX * 0.25) + (oldScreenX * 0.01));
+				YourGridTexts[3].setY((boundY * 0.35) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[3].setHeight(oldScreenX * 0.03);
+				YourGridTexts[3].setFontSize(scaling * 0.03);
+
+				YourGridTexts[4].setX((oldScreenX * 0.35) + (oldScreenX * 0.01));
+				YourGridTexts[4].setY((boundY * 0.35) + ((boundY * 0.05) - (scaling * 0.04)));
+				YourGridTexts[4].setWidth(oldScreenX * 0.08);
+				YourGridTexts[4].setFontSize(scaling * 0.08);
+
+				YourGridTexts[5].setX((oldScreenX * 0.45) + (oldScreenX * 0.01));
+				YourGridTexts[5].setY((boundY * 0.35) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[5].setHeight(oldScreenX * 0.03);
+				YourGridTexts[5].setFontSize(scaling * 0.03);
+
+				YourGridTexts[6].setX((oldScreenX * 0.55) + (oldScreenX * 0.01));
+				YourGridTexts[6].setY((boundY * 0.35) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[6].setHeight(oldScreenX * 0.03);
+				YourGridTexts[6].setFontSize(scaling * 0.03);
+
+				YourGridTexts[7].setX((oldScreenX * 0.35) + (oldScreenX * 0.01));
+				YourGridTexts[7].setY((boundY * 0.45) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[7].setHeight(oldScreenX * 0.03);
+				YourGridTexts[7].setFontSize(scaling * 0.03);
+
+				YourGridTexts[8].setX((oldScreenX * 0.35) + (oldScreenX * 0.01));
+				YourGridTexts[8].setY((boundY * 0.55) + ((boundY * 0.02) - (scaling * 0.015)));
+				YourGridTexts[8].setHeight(oldScreenX * 0.03);
+				YourGridTexts[8].setFontSize(scaling * 0.03);
+			}
+
+			function restructureGridPanels()
+			{
+				for (var i = 0; i < 9; i++)
+				{
+					if (YourGrid[i] != -1)
+					{
+						YourNumberPanels[YourGrid[i]-1].setX(YourSnapPoints[i][0]);
+						YourNumberPanels[YourGrid[i]-1].setY(YourSnapPoints[i][1]);
+						YourNumberPanels[YourGrid[i]-1].setWidth(oldScreenX * 0.1);
+						YourNumberPanels[YourGrid[i]-1].setHeight(boundY * 0.1);
+
+						YourNumberTexts[YourGrid[i]-1].setX(YourSnapPoints[i][0] + (oldScreenX * 0.01));
+						YourNumberTexts[YourGrid[i]-1].setY(YourSnapPoints[i][1] + ((boundY * 0.05) - (scaling * 0.04)));
+						YourNumberTexts[YourGrid[i]-1].setWidth(oldScreenX * 0.08);
+						YourNumberTexts[YourGrid[i]-1].setFontSize(scaling * 0.08);
+					}
+				}
+			}
+
+			function chaseMove(number)
+			{
+				YourNumberTexts[number - 1].setX(YourNumberPanels[number - 1].getX() + (oldScreenX * 0.01));
+				YourNumberTexts[number - 1].setY(YourNumberPanels[number - 1].getY() + ((boundY * 0.05) - (scaling * 0.04)));
+			}
+
+			function finalizeMove(number)
+			{
+				var panelLoc = [YourNumberPanels[number - 1].getX(), YourNumberPanels[number - 1].getY()];
+
+				var snapPoint = null;
+				var location = 0;
+				var shortestDistance = Math.sqrt(Math.pow((0.05 * boundY), 2.0) + Math.pow((0.05 * oldScreenX), 2.0));
+
+				for (var i = 0; i < YourSnapPoints.length; i++)
+				{
+					var point = YourSnapPoints[i];
+					var distanceX = Math.abs(panelLoc[0] - point[0]);
+					var distanceY = Math.abs(panelLoc[1] - point[1]);
+					if ((distanceX <= (0.05 * oldScreenX)) && (distanceY <= (0.05 * boundY)))
+					{
+						var distance = Math.sqrt(Math.pow(distanceY, 2.0) + Math.pow(distanceX, 2.0));
+						if (distance <= shortestDistance)
+						{
+							shortestDistance = distance;
+							location = i+1;
+						}
+					}
+				}
+
+				if (location != 0)
+				{
+					addPanelToGrid(number, location);
+				}
+				else
+				{
+					addPanelToRack(number);
+				}
+			}
+
+			function updateSums()
+			{
+				rowSum = 0;
+				colSum = 0;
+
+				if (YourGrid[2] != -1) { rowSum = rowSum + YourGrid[2]; }
+				if (YourGrid[3] != -1) { rowSum = rowSum + YourGrid[3]; }
+				if (YourGrid[4] != -1) { rowSum = rowSum + YourGrid[4]; }
+				if (YourGrid[5] != -1) { rowSum = rowSum + YourGrid[5]; }
+				if (YourGrid[6] != -1) { rowSum = rowSum + YourGrid[6]; }
+
+				if (YourGrid[0] != -1) { colSum = colSum + YourGrid[0]; }
+				if (YourGrid[1] != -1) { colSum = colSum + YourGrid[1]; }
+				if (YourGrid[4] != -1) { colSum = colSum + YourGrid[4]; }
+				if (YourGrid[7] != -1) { colSum = colSum + YourGrid[7]; }
+				if (YourGrid[8] != -1) { colSum = colSum + YourGrid[8]; }
+
+				counterTextRowFieldContent.setText("Sum\n" + rowSum);
+				counterTextColFieldContent.setText("Sum\n" + colSum);
+			}
+
+			function toggleProblemText()
+			{
+				if (problemTextPanelShown)
+				{
+					problemTextPanelShown = false;
+					problemTextPanel.setY(oldScreenY - 30);
+				}
+				else
+				{
+					problemTextPanelShown = true;
+					problemTextPanel.setY(0);
+				}
+				layer.draw();
+			}
+
+			function toggleProblemMode()
+			{
+				if (modeSelector == 1)
+				{
+					modeSelector = 2;
+					removePanelFromGrid(1);
+					removePanelFromGrid(2);
+					removePanelFromGrid(3);
+					removePanelFromGrid(4);
+					removePanelFromGrid(5);
+					removePanelFromGrid(6);
+					removePanelFromGrid(7);
+					removePanelFromGrid(8);
+					removePanelFromGrid(9);
+					removePanelFromRack(1);
+					removePanelFromRack(2);
+					removePanelFromRack(3);
+					removePanelFromRack(4);
+					removePanelFromRack(5);
+					removePanelFromRack(6);
+					removePanelFromRack(7);
+					removePanelFromRack(8);
+					removePanelFromRack(9);
+					addPanelToRack(1);
+					addPanelToRack(2);
+					addPanelToRack(3);
+					addPanelToRack(4);
+					addPanelToRack(5);
+					addPanelToRack(6);
+					addPanelToRack(7);
+					addPanelToRack(8);
+					addPanelToRack(9);
+					rowSum = 0;
+					colSum = 0;
+				}
+				else
+				{
+					modeSelector = 1;
+					removePanelFromGrid(1);
+					removePanelFromGrid(2);
+					removePanelFromGrid(3);
+					removePanelFromGrid(4);
+					removePanelFromGrid(5);
+					removePanelFromGrid(6);
+					removePanelFromGrid(7);
+					removePanelFromGrid(8);
+					removePanelFromGrid(9);
+					removePanelFromRack(1);
+					removePanelFromRack(2);
+					removePanelFromRack(3);
+					removePanelFromRack(4);
+					removePanelFromRack(5);
+					removePanelFromRack(6);
+					removePanelFromRack(7);
+					removePanelFromRack(8);
+					removePanelFromRack(9);
+					addPanelToRack(1);
+					addPanelToRack(2);
+					addPanelToRack(3);
+					addPanelToGrid(4, 1);
+					addPanelToRack(5);
+					addPanelToRack(6);
+					addPanelToGrid(7, 9);
+					addPanelToGrid(8, 2);
+					addPanelToRack(9);
+					rowSum = 0;
+					colSum = 19;
+				}
+				reDrawAll();
+			}
+
+			//********************************************************************************************//
+			//Control Events
+			//********************************************************************************************//
+
+			window.onresize = function(event)
+			{ reDrawAll(); }
+
+			//********************************************************************************************//
+			//Initialization Code
+			//********************************************************************************************//
+			initDrawAll();
+		</script>
+	</body>
+</html>

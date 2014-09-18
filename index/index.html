@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Meta Attributes -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<!-- Tab Heading Title -->
+		<title>PermissionsEx Color Sandbox</title>
+
+		<!-- Bootstrap Core CSS -->
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- PermissionsEx Core CSS -->
+		<link href="css/PermissionsEx.css" rel="stylesheet">
+
+		<!-- IE Backward Compatibility -->
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+		<!-- Modal -->
+		<div class="modal fade" id="techNotesModal" tabindex="-1" role="dialog" aria-labelledby="techNotesModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">&times;</span>
+							<span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title" id="techNotesModalLabel">Tech Notes</h4>
+					</div>
+					<div class="modal-body">
+						<b>Changelog:</b>
+						<ul>
+							<li>Alpha v0.31 (16-Sep-14; 9:52PM): Added two different result displays.</li>
+							<li>Alpha v0.3 (16-Sep-14; 9:28PM): </li>
+							<ul>
+								<li>Added formatting buttons for one-click color!</li>
+								<li>Added buttons to facilitate copying of commands into the game.</li>
+							</ul>
+							<li>Alpha 0.2 (11-Sep-14, 11:41AM): Uses cookies to memorize last entries.</li>
+							<li>Alpha 0.11 (10-Sep-14, 10:40PM): Contrast changes to outcome box, credits text.</li>
+							<li>Alpha 0.1 (10-Sep-14, 8:50PM): First working copy.</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="site-wrapper">
+			<div class="site-wrapper-inner">
+				<div class="cover-container">
+
+					<!-- Site Page Header Content -->
+					<div class="masthead clearfix">
+						<div class="inner">
+							<h3 class="masthead-brand">PEx Color Sandbox <i>v0.31</i></h3>
+							<ul class="nav masthead-nav">
+								<li>
+									<div class="btn-group" data-toggle="buttons">
+										<label class="btn btn-default active">
+											<input type="radio" name="options">Normal
+										</label>
+										<label class="btn btn-default">
+											<input type="radio" name="options">WL-SMP
+										</label>
+									</div>
+								</li>
+								<li>
+									<button class="btn btn-info" data-toggle="modal" data-target="#techNotesModal">Notes</button>
+								</li>
+							</ul>
+						</div>
+						<div class="inner">
+							Hello, and welcome to the <i>PEx Color Sandbox</i>! Here, you can generate PermissionsEx commands that give prefixes and suffixes to players. The information you put in the fields below will simulate the effect of issuing the <b>/pex <i>[user]</i> prefix</b> and <b>/pex <i>[user]</i> suffix</b> commands, and you can see the changes in real-time!
+						</div>
+						<!-- Button trigger modal -->
+					</div>
+
+					<!-- Site Page Body Content -->
+					<div class="inner cover">
+						<p>
+							<div id="prefixField" class="form-group has_feedback">
+								<label id="prefixLabel" class="control-label" for="prefixInput"></label>
+								<input id="prefixInput" class="form-control"  type="text" placeholder="Prefix">
+								<span  id="prefixSpan"  class="glyphicon form-control-feedback"></span>
+							</div>
+						</p>
+						<p>
+							<div id="usernameField" class="form-group has_feedback">
+								<label id="usernameLabel" class="control-label" for="usernameInput"></label>
+								<input id="usernameInput" class="form-control"  type="text" placeholder="Username">
+								<span  id="usernameSpan"  class="glyphicon form-control-feedback"></span>
+							</div>
+						</p>
+						<p>
+							<div id="suffixField" class="form-group has_feedback">
+								<label id="suffixLabel" class="control-label" for="suffixInput"></label>
+								<input id="suffixInput" class="form-control"  type="text" placeholder="Suffix">
+								<span  id="suffixSpan"  class="glyphicon form-control-feedback"></span>
+							</div>
+						</p>
+						<hr />
+						<p>
+							<div class="input-group">
+								<input type="text" class="form-control" placeholder="--" readonly>
+								<span class="input-group-btn">
+									<button class="btn btn-success" type="button">Copy Prefix</button>
+								</span>
+							</div>
+						</p>
+						<p>
+							<div class="input-group">
+								<input type="text" class="form-control" placeholder="--" readonly>
+								<span class="input-group-btn">
+									<button class="btn btn-success" type="button">Copy Suffix</button>
+								</span>
+							</div>
+						</p>
+						<hr />
+						<p>
+							<div class="input-group">
+								<input type="text" class="form-control" placeholder="--" readonly>
+								<span class="input-group-btn">
+									<button class="btn btn-success" type="button">Copy Prefix</button>
+								</span>
+							</div>
+						</p>
+						<p>
+							<div class="input-group">
+								<input type="text" class="form-control" placeholder="--" readonly>
+								<span class="input-group-btn">
+									<button class="btn btn-success" type="button">Copy Suffix</button>
+								</span>
+							</div>
+						</p>
+					</div>
+
+					<!-- Site Page Footer Content -->
+					<div class="mastfoot">
+						<div class="inner">
+							<p>
+								<b>Disclaimer:</b> This web application makes use of source materials by the <a href="http://jquery.com/">jQuery foundation</a> and <a href="http://getbootstrap.com/">Twitter Bootstrap</a>. Please note that this is early alpha software that has not undergone rigorous testing or bugfixing. We do not guarantee correctness or stability.
+							</p>
+							<p>
+								Copyright © 2014 by <a href="http://choicecraft.net/members/0612.7490/">0612</a>. Released under <a href="http://opensource.org/licenses/MIT">MIT License</a>.
+							</p>
+						</div>
+					</div>
+
+					<!-- End of Content -->
+				</div>
+			</div>
+		</div>
+
+		<!-- jQuery Library -->
+		<script src="jquery/1.11.1/jquery.min.js"></script>
+
+		<!-- Bootstrap Core JQuery -->
+		<script src="bootstrap/js/bootstrap.min.js"></script>
+
+		<!-- PermissionsEx Core JQuery -->
+		<script src="jquery/PermissionsEx.js"></script>
+	</body>
+</html>

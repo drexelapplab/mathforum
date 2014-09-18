@@ -1,0 +1,1028 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, minimal-ui" />
+		<style>
+			*
+			{
+				padding: 0;
+				margin: 0;
+				border: 0;
+			}
+
+			body
+			{
+				overflow: hidden;
+			}
+
+			#container
+			{
+				background-color: red;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.1.0.min.js"></script>
+		<script src="shapes.js"></script>
+		<script defer="defer">
+			//********************************************************************************************//
+			//Data Storage
+			//********************************************************************************************//
+
+			var oldOrientation;
+			var newOrientation;
+
+			var newScreenX;
+			var newScreenY;
+			var newBoundY;
+
+			var oldScreenX;
+			var oldScreenY;
+			var oldBoundY;
+
+			var scaling;
+			var stage;
+			var layer;
+			var GUIField;
+
+			var problemTextBar;
+			var problemTextBarContent;
+			var problemTextField;
+			var problemTextFieldContent;
+			var problemTextPanelShown = false;
+
+			var tablePicker;
+
+			var YourTables = [];
+			var YourChairs = [];
+
+			var YourTablePoints = [];
+			var YourSnapPoints = [];
+
+			var totalChairs = 0;
+
+			var preLocation = null;
+
+			//********************************************************************************************//
+			//Drawing Methods
+			//********************************************************************************************//
+
+			function initDrawAll()
+			{
+				// Data Storage
+				newOrientation = (window.orientation);
+				tablePicker = 10;
+
+				newScreenX = (window.innerWidth);
+				newScreenY = (window.innerHeight);
+				newBoundY = (window.innerHeight) - 30;
+
+				scaling = Math.min(newScreenX, newBoundY) / 12.5;
+				
+				drawGUI();
+				drawProblemText();
+				drawCounterText();
+				drawTableToggle();
+
+				YourChairs = [];
+				YourTables = [];
+				generateCircularTables(10, newScreenX, newBoundY, YourChairs, YourTables);
+				generateStage(stage, layer, GUIField, YourChairs, YourTables);
+
+				oldOrientation = (window.orientation);
+
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				oldBoundY = (window.innerHeight) - 30;
+			}
+
+			function reDrawAll()
+			{
+				// Data Storage
+				newScreenX = (window.innerWidth);
+				newScreenY = (window.innerHeight);
+				newBoundY = (window.innerHeight) - 30;
+
+				newOrientation = (window.orientation);
+
+				scaling = Math.min(newScreenX, newBoundY) / 12.5;
+				
+				drawGUI();
+				drawProblemText();
+				drawCounterText();
+				drawTableToggle();
+
+				if ((typeof oldOrientation != 'undefined') && (newOrientation != oldOrientation))
+				{
+					modifyDeviceWindow(YourTables, YourChairs);
+					generateStage(stage, layer, GUIField, YourChairs, YourTables);
+				}
+				else
+				{
+					YourChairs = [];
+					YourTables = [];
+					if (tablePicker == 10)
+					{ generateCircularTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
+					else
+					{ generateGridTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
+					generateStage(stage, layer, GUIField, YourChairs, YourTables);
+					getSnapTables(newScreenX, newBoundY, YourTables, null);
+				}
+
+				oldOrientation = (window.orientation);
+
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				oldBoundY = (window.innerHeight) - 30;
+			}
+
+			function refreshStates()
+			{
+				drawGUI();
+				generateStage(stage, layer, GUIField, YourChairs, YourTables);
+			}
+
+			function drawProblemText()
+			{
+				// Create problemText Bar
+				problemTextBar = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: newScreenX,
+					height: 30,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0,y:30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextBarContent = new Kinetic.Text({
+					x: 5,
+					y: 5,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					text: 'Tap here to view problem',
+					fill: 'white',
+					width: newScreenX - 5,
+					align: 'center'
+				});
+
+				// Create problemText Field
+				problemTextField = new Kinetic.Rect({
+					x: 0,
+					y: 30,
+					width: newScreenX,
+					height: newScreenY - 30,
+					fillLinearGradientStartPoint: {x:0, y:30},
+					fillLinearGradientEndPoint: {x:0,y:newScreenY - 30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextFieldContent = new Kinetic.Text({
+					x: 25,
+					y: 55,
+					width: newScreenX - 55,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					lineHeight: 1.2,
+					text: '"The Teddy Bears" Banquet [Problem #4651]\n\nUrsinus Hotel is one of the world\'s few hotels just for bears. The tables in its banquet room are regular hexagons with room for one seat along each side. In other words, one table standing alone seats six bears.\n\nTo make more room for dancing at the Teddy Bears\' wedding banquet, the staff arranges the tables in a long row along one side of the room. When they connect two tables together, here\'s how the seating looks:\n\n    -  How many guests can sit at 10 tables?\n    -  How many guests can sit at 25 tables?\n    -  How many guests can sit at 100 tables?\n\nExplain how you found your answers and how you know you are right. Describe any patterns that helped you.\n\nExtra\n    - Use either words or numbers and symbols to write a rule for calculating the number of bears that can sit at any given number of tables.\n    -  How many tables would it take, arranged in one straight row, to seat 120 bears?',
+					fill: 'white'
+				});
+
+				if (problemTextPanelShown == false)
+				{
+					// Create problemText Panel Grouping
+					problemTextPanel = new Kinetic.Group({
+						x: 0,
+						y: newScreenY - 30,
+					});
+				}
+				else
+				{
+					// Create problemText Panel Grouping
+					problemTextPanel = new Kinetic.Group({
+						x: 0,
+						y: 0,
+					});
+				}
+
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
+				problemTextPanel.add(problemTextField);
+				problemTextPanel.add(problemTextFieldContent);
+
+				problemTextPanel.on("touchstart", function() {
+					flipProblemTextPanel(problemTextPanel);
+				});
+
+				problemTextPanel.on("mousedown", function() {
+					flipProblemTextPanel(problemTextPanel);
+				});
+			}
+
+			function drawCounterText()
+			{
+				// Create problemText Bar
+				counterTextBar = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: 100,
+					height: 50,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0,y:30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				counterTextBarContent = new Kinetic.Text({
+					x: 5,
+					y: 5,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					text: 'Number of Chairs',
+					fill: 'white',
+					width: 90,
+					align: 'center'
+				});
+
+				// Create problemText Field
+				counterTextField = new Kinetic.Rect({
+					x: 0,
+					y: 50,
+					width: 100,
+					height: 50,
+					fillLinearGradientStartPoint: {x:0, y:30},
+					fillLinearGradientEndPoint: {x:0, y:50},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				counterTextFieldContent = new Kinetic.Text({
+					x: 0,
+					y: 65,
+					width: 100,
+					fontFamily: 'Arial',
+					fontSize: 24,
+					lineHeight: 1.2,
+					text: '0',
+					align: 'center',
+					fill: 'white'
+				});
+
+				// Create problemText Panel Grouping
+				counterTextPanel = new Kinetic.Group({
+					x: 0,
+					y: 0,
+				});
+
+				counterTextPanel.add(counterTextBar);
+				counterTextPanel.add(counterTextBarContent);
+				counterTextPanel.add(counterTextField);
+				counterTextPanel.add(counterTextFieldContent);
+			}
+
+			function drawTableToggle()
+			{
+				// Create problemText Field
+				tableToggleField10 = new Kinetic.Rect({
+					x: 0,
+					y: 100,
+					width: 100,
+					height: 30,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0, y:30},
+					fillLinearGradientColorStops: [0, '#9BF28A', 1, '#6FB063'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field
+				tableToggleField25 = new Kinetic.Rect({
+					x: 0,
+					y: 100,
+					width: 100,
+					height: 30,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0, y:30},
+					fillLinearGradientColorStops: [0, '#F2DF8A', 1, '#B0AA63'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				tableToggleFieldContent10 = new Kinetic.Text({
+					x: 0,
+					y: 105,
+					width: 100,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					lineHeight: 1.2,
+					text: '10 Tables',
+					align: 'center',
+					fill: 'white'
+				});
+
+				// Create problemText Field content.
+				tableToggleFieldContent25 = new Kinetic.Text({
+					x: 0,
+					y: 105,
+					width: 100,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					lineHeight: 1.2,
+					text: '25 Tables',
+					align: 'center',
+					fill: 'white'
+				});
+
+				// Create problemText Panel Grouping
+				tableTogglePanel = new Kinetic.Group({
+					x: 0,
+					y: 0,
+				});
+
+				if (tablePicker == 10)
+				{
+					tableTogglePanel.add(tableToggleField10);
+					tableTogglePanel.add(tableToggleFieldContent10);
+				}
+				else
+				{
+					tableTogglePanel.add(tableToggleField25);
+					tableTogglePanel.add(tableToggleFieldContent25);
+				}
+
+				tableTogglePanel.on("touchstart", function() {
+					flipTablePanel();
+				});
+
+				tableTogglePanel.on("mousedown", function() {
+					flipTablePanel();
+				});
+			}
+
+			function drawGUI()
+			{
+				// Create kinetic stage.
+				stage = new Kinetic.Stage({
+					container: 'container',
+					width: newScreenX,
+					height: newScreenY,
+				});
+
+				// Create kinetic layer.
+				layer = new Kinetic.Layer();
+
+				// Create GUI Field
+				GUIField = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: newScreenX,
+					height: newScreenY,
+					fill: '#C9B89F',
+					stroke: 'black',
+					strokeWidth: 4
+				});
+			}
+
+			//********************************************************************************************//
+			//Creation Methods
+			//********************************************************************************************//
+
+			function generateCircularTables(numberOfTables, dimensionX, dimensionY, chairList, tableList)
+			{
+				var theta = (2 * Math.PI / numberOfTables);
+				var radius = Math.min(dimensionX, dimensionY) * 0.4;
+
+				for (var i = 0; i < numberOfTables; i++)
+				{
+					var tempX = (dimensionX / 2) + (radius * Math.cos(theta * i));
+					var tempY = (dimensionY / 2) + (radius * Math.sin(theta * i));
+
+					generateChairset(chairList, tempX, tempY);
+				}
+
+				for (var i = 0; i < numberOfTables; i++)
+				{
+					var tempX = (dimensionX / 2) + (radius * Math.cos(theta * i));
+					var tempY = (dimensionY / 2) + (radius * Math.sin(theta * i));
+
+					generateTable(tableList, tempX, tempY);
+				}
+
+				for (var i = 0; i < numberOfTables; i++)
+				{ generateEvents(YourTables, YourChairs[i], YourTables[i]); }
+			}
+
+			function generateGridTables(numberOfTables, dimensionX, dimensionY, chairList, tableList)
+			{
+				var count;
+				var boundX = dimensionX * 0.1;
+				var boundY = dimensionY * 0.1;
+				var numCols;
+				var numRows;
+
+				if (dimensionX > dimensionY)
+				{
+					numRows = Math.floor(Math.sqrt(numberOfTables));
+					numCols = Math.ceil(numberOfTables / numRows);
+				}
+				else
+				{
+					numCols = Math.floor(Math.sqrt(numberOfTables));
+					numRows = Math.ceil(numberOfTables / numCols);
+				}
+
+				var subdivisionX = (dimensionX * 0.8) / (numCols - 1);
+				var subdivisionY = (dimensionY * 0.8) / (numRows - 1);
+
+				count = numberOfTables;
+
+				for (var i = 0; i < numCols; i++)
+				{
+					for (var j = 0; j < numRows; j++)
+					{
+						if (count > 0)
+						{
+							var tempX = boundX + (subdivisionX * i);
+							var tempY = boundY + (subdivisionY * j);
+
+							generateChairset(chairList, tempX, tempY);
+							count--;
+						}
+					}
+				}
+
+				count = numberOfTables;
+
+				for (var i = 0; i < numCols; i++)
+				{
+					for (var j = 0; j < numRows; j++)
+					{
+						if (count > 0)
+						{
+							var tempX = boundX + (subdivisionX * i);
+							var tempY = boundY + (subdivisionY * j);
+
+							generateTable(tableList, tempX, tempY);
+							count--;
+						}
+					}
+				}
+
+				for (var i = 0; i < numberOfTables; i++)
+				{ generateEvents(YourTables, YourChairs[i], YourTables[i]); }
+			}
+
+			function generateChairset(chairList, xpos, ypos)
+			{
+				chairSet = new Kinetic.Group({
+					x: xpos,
+					y: ypos
+				});
+
+				// Create First Chair
+				chair1 = new Kinetic.RegularPolygon({
+					x: scaling * -0.4375,
+					y: 3 * scaling / 4,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create Second Chair
+				chair2 = new Kinetic.RegularPolygon({
+					x: scaling * 0.4375,
+					y: 3 * scaling / 4,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create Third Chair
+				chair3 = new Kinetic.RegularPolygon({
+					x: -7 * scaling / 8,
+					y: 0,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create Fourth Chair
+				chair4 = new Kinetic.RegularPolygon({
+					x: 7 * scaling / 8,
+					y: 0,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create Fifth Chair
+				chair5 = new Kinetic.RegularPolygon({
+					x: scaling * -0.4375,
+					y: -3 * scaling / 4,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create Sixth Chair
+				chair6 = new Kinetic.RegularPolygon({
+					x: scaling * 0.4375,
+					y: -3 * scaling / 4,
+					sides: 6,
+					radius: scaling / 5.0,
+					fill: '#5E4000',
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				chairSet.add(chair1);
+				chairSet.add(chair2);
+				chairSet.add(chair3);
+				chairSet.add(chair4);
+				chairSet.add(chair5);
+				chairSet.add(chair6);
+
+				chairList.push(chairSet);
+
+				return chairSet;
+			}
+
+			function generateTable(tableList, xpos, ypos)
+			{
+				// Create Table
+				table = new Kinetic.RegularPolygon({
+					x: xpos,
+					y: ypos,
+					sides: 6,
+					radius: scaling,
+					fill: 'white',
+					stroke: 'black',
+					strokeWidth: scaling / 10.0,
+					draggable: true
+				});
+
+				tableList.push(table);
+
+				return table;
+			}
+
+			function generateEvents(tableList, chairSet, table)
+			{
+				table.on("dragmove", function() {
+					moveHandler(newScreenX, newBoundY, YourSnapPoints, YourTablePoints, table);
+					warpToTable(chairSet, table);
+				});
+
+				table.on("dragend", function() {
+					getSnapTables(newScreenX, newBoundY, YourTables, null);
+				});
+
+				table.on("touchstart", function() {
+					YourSnapPoints = getSnapTables(newScreenX, newBoundY, YourTables, table);
+					YourTablePoints = getTablePoints(YourTables, table);
+					preLocation = [table.getX(), table.getY()];
+				});
+
+				table.on("mousedown", function() {
+					YourSnapPoints = getSnapTables(newScreenX, newBoundY, YourTables, table);
+					YourTablePoints = getTablePoints(YourTables, table);
+					preLocation = [table.getX(), table.getY()];
+				});
+			}
+
+			function generateStage(targetStage, targetLayer, targetGUI, chairList, tableList)
+			{
+				tableCount = tableList.length;
+				chairCount = chairList.length;
+
+				targetLayer.add(targetGUI);
+
+				for (var i = 0; i < chairCount; i++)
+				{ targetLayer.add(chairList[i]); }
+
+				for (var i = 0; i < tableCount; i++)
+				{ targetLayer.add(tableList[i]); }
+
+				targetLayer.add(counterTextPanel);
+				targetLayer.add(tableTogglePanel);
+				targetLayer.add(problemTextPanel);
+
+				targetStage.add(targetLayer);
+			}
+
+			//********************************************************************************************//
+			//Control Accessors
+			//********************************************************************************************//
+
+			function getDistance(pointA, pointB)
+			{
+				var checkX = (pointA[0] - pointB[0]);
+				var checkY = (pointA[1] - pointB[1]);
+
+				return Math.sqrt(Math.pow(checkY, 2.0) + Math.pow(checkX, 2.0));
+			}
+
+			function getSnapPoints(dimensionX, dimensionY, tableList, table, selectedTable)
+			{
+				var snapPoints = [];
+				var tableCount = tableList.length;
+
+				var tableX = table.getX();
+				var tableY = table.getY();
+
+				var snapPointX;
+				var snapPointY;
+
+				for (var i = 0; i < 6; i++)
+				{
+					if (i == 0)
+					{
+						snapPointX = tableX + (2 * scaling * Math.cos(Math.PI / 6));
+						snapPointY = tableY;
+					}
+					else if (i == 1)
+					{
+						snapPointX = tableX + (2 * scaling * Math.cos(Math.PI / 6) * Math.cos(Math.PI / 3));
+						snapPointY = tableY - (2 * scaling * Math.cos(Math.PI / 6) * Math.sin(Math.PI / 3));
+					}
+					else if (i == 2)
+					{
+						snapPointX = tableX - (2 * scaling * Math.cos(Math.PI / 6) * Math.cos(Math.PI / 3));
+						snapPointY = tableY - (2 * scaling * Math.cos(Math.PI / 6) * Math.sin(Math.PI / 3));
+					}
+					else if (i == 3)
+					{
+						snapPointX = tableX - (2 * scaling * Math.cos(Math.PI / 6));
+						snapPointY = tableY;
+					}
+					else if (i == 4)
+					{
+						snapPointX = tableX - (2 * scaling * Math.cos(Math.PI / 6) * Math.cos(Math.PI / 3));
+						snapPointY = tableY + (2 * scaling * Math.cos(Math.PI / 6) * Math.sin(Math.PI / 3));
+					}
+					else //if (i == 5)
+					{
+						snapPointX = tableX + (2 * scaling * Math.cos(Math.PI / 6) * Math.cos(Math.PI / 3));
+						snapPointY = tableY + (2 * scaling * Math.cos(Math.PI / 6) * Math.sin(Math.PI / 3));
+					}
+
+					if ((snapPointX < (dimensionX / 10)) || (snapPointX > 9 * (dimensionX / 10)) || (snapPointY < (dimensionY / 10)) || (snapPointY > (9 * dimensionY / 10)))
+					{
+						totalChairs++;
+					}
+					else
+					{
+						var passed = true;
+						for (var j = 0; j < tableCount; j++)
+						{
+							if ((tableList[j] != table) && ((selectedTable == null) || (tableList[j] != selectedTable)))
+							{
+								var pointA = [tableList[j].getX(), tableList[j].getY()];
+								var pointB = [snapPointX, snapPointY];
+
+								if (getDistance(pointA, pointB) <= (1.95 * scaling * Math.cos(Math.PI / 6)))
+								{
+									passed = false;
+									if (!(getDistance(pointA, pointB) <= (1.05 * scaling * Math.cos(Math.PI / 6))))
+									{
+										totalChairs++;
+									}
+									break;
+								}
+							}
+						}
+
+						if (passed)
+						{
+							totalChairs++;
+							snapPoints.push([snapPointX, snapPointY]);
+						}
+					}
+				}
+
+				return snapPoints;
+			}
+
+			function getSnapTables(dimensionX, dimensionY, tableList, selectedTable)
+			{
+				totalChairs = 0;
+				var snapPoints = [];
+				var tableCount = tableList.length;
+
+				for (var i = 0; i < tableCount; i++)
+				{
+					if ((selectedTable == null) || (tableList[i] != selectedTable))
+					{
+						var tempSnapPoints = getSnapPoints(dimensionX, dimensionY, tableList, tableList[i], selectedTable);
+						var snapPointsCount = tempSnapPoints.length;
+
+						for (var j = 0; j < snapPointsCount; j++)
+						{ snapPoints.push(tempSnapPoints[j]); }
+					}
+				}
+
+				if (selectedTable == null) 
+				{
+					counterTextFieldContent.setText(totalChairs.toString());
+					refreshStates();
+				}
+				else
+				{
+					counterTextFieldContent.setText(totalChairs.toString() + " + 6");
+				}
+
+				return snapPoints;
+			}
+
+			function getTablePoints(tableList, selectedTable)
+			{
+				var tablePoints = [];
+				var tableCount = tableList.length;
+
+				for (var i = 0; i < tableCount; i++)
+				{
+					if ((selectedTable == null) || (tableList[i] != selectedTable))
+					{ tablePoints.push([tableList[i].getX(), tableList[i].getY()]); }
+				}
+
+				return tablePoints;
+			}
+
+			//********************************************************************************************//
+			//Control Mutators
+			//********************************************************************************************//
+
+			function realignTables(chairList, tableList)
+			{
+				chairCount = chairList.length;
+				tableCount = tableList.length;
+
+				for (var i = 0; i < tableCount; i++)
+				{
+					preMoveX = tableList[i].getX();
+					preMoveY = tableList[i].getY();
+					snapToGrid(tableList, tableList[i]);
+					warpToTable(chairList[i], tableList[i]);
+				}
+			}
+
+			function moveHandler(dimensionX, dimensionY, snapPoints, tablePoints, selectedTable)
+			{
+				var location = [selectedTable.getX(), selectedTable.getY()];
+
+				var snapPointsCount = snapPoints.length;
+				var tablePointsCount = tablePoints.length;
+
+				var snapPoint = null;
+				var shortestDistance = (2 * scaling);
+
+				for (var i = 0; i < snapPointsCount; i++)
+				{
+					var distance = getDistance(location, snapPoints[i]);
+					if ((distance <= (2 * scaling * Math.cos(Math.PI / 6))) && (distance <= shortestDistance))
+					{
+						shortestDistance = distance;
+						snapPoint = snapPoints[i];
+					}
+				}
+
+				if (snapPoint != null)
+				{
+					selectedTable.setX(snapPoint[0]);
+					selectedTable.setY(snapPoint[1]);
+				}
+				else
+				{
+					if ((location[0] < (dimensionX / 10)) || (location[0] > 9 * (dimensionX / 10)) || (location[1] < (dimensionY / 10)) || (location[1] > (9 * dimensionY / 10)))
+					{
+						selectedTable.setX(preLocation[0]);
+						selectedTable.setY(preLocation[1]);
+					}
+					else
+					{
+						for (var j = 0; j < tablePointsCount; j++)
+						{
+							if (getDistance(location, tablePoints[j]) <= (1.8 * scaling * Math.cos(Math.PI / 6)))
+							{
+								selectedTable.setX(preLocation[0]);
+								selectedTable.setY(preLocation[1]);
+								break;
+							}
+						}
+					}
+				}
+
+				preLocation = [selectedTable.getX(), selectedTable.getY()];
+			}
+
+			function warpToTable(YourObject, TableObject)
+			{
+				YourObject.setX(TableObject.getX());
+				YourObject.setY(TableObject.getY());
+			}
+
+			function flipProblemTextPanel(YourObject)
+			{
+				if (problemTextPanelShown)
+				{
+					problemTextPanelShown = false;
+					YourObject.setY(newScreenY - 30);
+				}
+				else
+				{
+					problemTextPanelShown = true;
+					YourObject.setY(0);
+				}
+				refreshStates();
+			}
+
+			function flipTablePanel()
+			{
+				if (tablePicker == 10)
+				{ tablePicker = 25; }
+				else
+				{ tablePicker = 10; }
+				reDrawAll();
+			}
+
+			function modifyDeviceWindow(tableList, chairList)
+			{
+				switch (oldOrientation)
+				{
+					case 0:
+					switch (newOrientation)
+					{
+						case 0:
+						// Nothing
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getY());
+							tableList[i].setY(tableList[i].getX());
+						}
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(tableList[i].getY());
+							tableList[i].setY(newScreenY - tableList[i].getX());
+						}
+						break;
+					}
+					break;
+
+					case 180:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case 180:
+						// Nothing
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - (oldScreenY - tableList[i].getY()));
+							tableList[i].setY(oldScreenX - tableList[i].getX());
+						}
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(oldScreenY - tableList[i].getY());
+							tableList[i].setY(newScreenY - (oldScreenX - tableList[i].getX()));
+						}
+						break;
+					}
+					break;
+
+					case -90:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(tableList[i].getY());
+							tableList[i].setY(oldScreenX - tableList[i].getX());
+						}
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getY());
+							tableList[i].setY(newScreenY - (oldScreenX - tableList[i].getX()));
+						}
+						break;
+
+						case -90:
+						// Nothing
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+					}
+					break;
+
+					case 90:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(oldScreenY - tableList[i].getY());
+							tableList[i].setY(tableList[i].getX());
+						}
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - (oldScreenY - tableList[i].getY()));
+							tableList[i].setY(newScreenY - tableList[i].getX());
+						}
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case 90:
+						// Nothing
+						break;
+					}
+					break;
+				}
+				for (var j = 0; j < chairList.length; j++)
+				{ warpToTable(chairList[j], tableList[j]); }
+			}
+
+			//********************************************************************************************//
+			//Control Events
+			//********************************************************************************************//
+
+			window.onresize = function(event)
+			{ reDrawAll(); }
+
+			//********************************************************************************************//
+			//Initialization Code
+			//********************************************************************************************//
+			initDrawAll();
+			getSnapTables(newScreenX, newBoundY, YourTables, null);
+			flipProblemTextPanel(problemTextPanel);
+		</script>
+	</body>
+</html>

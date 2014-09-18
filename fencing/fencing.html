@@ -1,0 +1,668 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, minimal-ui" />
+		<style>
+			*
+			{
+				padding: 0;
+				margin: 0;
+				border: 0;
+			}
+
+			body
+			{
+				overflow: hidden;
+			}
+
+			#container
+			{
+				background-color: red;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.1.0.min.js"></script>
+		<script src="shapes.js"></script>
+		<script defer="defer">
+			//********************************************************************************************//
+			//Data Storage
+			//********************************************************************************************//
+
+			var perimeter;
+			var newScreenX;
+			var newScreenY;
+			var newBoundY;
+			var oldScreenX;
+			var oldScreenY;
+			var oldBoundY;
+			var scaling;
+			var stage;
+			var layer;
+			var GUIField;
+			var problemTextBar;
+			var problemTextBarContent;
+			var problemTextField;
+			var problemTextFieldContent;
+			var problemTextPanelShown = true;
+			var NECorner;
+			var NWCorner;
+			var SWCorner;
+			var SECorner;
+			var Barn;
+			var Fence;
+			var oldX;
+			var oldY;
+			var oldPerimeter;
+			var oldArea;
+
+			//********************************************************************************************//
+			//Drawing Methods
+			//********************************************************************************************//
+
+			function initDraw()
+			{
+				// Data Storage
+				newScreenX = (window.innerWidth);
+				newScreenY = (window.innerHeight);
+				newBoundY = (window.innerHeight) - 30;
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				oldBoundY = (window.innerHeight) - 30;
+
+				scaling = Math.min(newScreenX, newBoundY) / 12.5;
+
+				drawGUI();
+				drawProblemText();
+				drawResultText();
+				generateBarn();
+				generateFencePosts();
+				generateFencing();
+
+				perimeter = ((2 * (NECorner.getX() - NWCorner.getX())) + (SWCorner.getY() - NWCorner.getY())) / ((oldScreenY * 0.8) / 20);
+				oldPerimeter = perimeter;
+				generateStage();
+			}
+
+			function reDraw()
+			{
+				// Data Storage
+				newScreenX = (window.innerWidth);
+				newScreenY = (window.innerHeight);
+				newBoundY = (window.innerHeight) - 30;
+				scaling = Math.min(newScreenX, newBoundY) / 12.5;
+
+				drawGUI();
+				drawProblemText();
+				drawResultText();
+				generateBarn();
+				generateFencePosts();
+				generateFencing();
+
+				perimeter = ((2 * (NECorner.getX() - NWCorner.getX())) + (SWCorner.getY() - NWCorner.getY())) / ((oldScreenY * 0.8) / 20);
+				oldPerimeter = perimeter;
+
+				oldScreenX = (window.innerWidth);
+				oldScreenY = (window.innerHeight);
+				oldBoundY = (window.innerHeight) - 30;
+
+				generateStage();
+			}
+
+			function drawFencing()
+			{
+				Fence.setX(NWCorner.getX());
+				Fence.setY(NWCorner.getY());
+				Fence.setWidth(SECorner.getX() - NWCorner.getX());
+				Fence.setHeight(SECorner.getY() - NWCorner.getY());
+			}
+
+			function drawProblemText()
+			{
+				// Create problemText Bar
+				problemTextBar = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: newScreenX,
+					height: 30,
+					fillLinearGradientStartPoint: {x:0, y:0},
+					fillLinearGradientEndPoint: {x:0,y:30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextBarContent = new Kinetic.Text({
+					x: 5,
+					y: 5,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					text: 'Tap here to view problem',
+					fill: 'white',
+					width: newScreenX - 5,
+					align: 'center'
+				});
+
+				// Create problemText Field
+				problemTextField = new Kinetic.Rect({
+					x: 0,
+					y: 30,
+					width: newScreenX,
+					height: newScreenY - 30,
+					fillLinearGradientStartPoint: {x:0, y:30},
+					fillLinearGradientEndPoint: {x:0,y:newScreenY - 30},
+					fillLinearGradientColorStops: [0, '#69699B', 1, '#505077'],
+					stroke: 'black',
+					strokeWidth: 2
+				});
+
+				// Create problemText Field content.
+				problemTextFieldContent = new Kinetic.Text({
+					x: 25,
+					y: 55,
+					width: newScreenX - 55,
+					fontFamily: 'Arial',
+					fontSize: 18,
+					lineHeight: 1.2,
+					text: 'Building Fences [Problem #998]\n\nWe went to the hardware store to buy picture hooks. We came home with thirty-six yards of fence material, because it was on sale. We decided to put the fencing around a rectangular garden that we have been planning. The twenty-foot side of our shed will be along one of the edges of the garden.\n\nI would like you to help us plan so that we can maximize the area of the garden. What is the largest possible area that can be enclosed by the fence? Please express your answer in square feet. In your explanation, be sure to include the length and width of the garden and describe how you solved the problem.\n\n    Extra: We will also need fenceposts to place at the corners and every four feet along the fence. How many fenceposts might we purchase?',
+					fill: 'white'
+				});
+
+				// Create problemText Panel Grouping
+				problemTextPanel = new Kinetic.Group({
+					x: 0,
+					y: 0,
+				});
+
+				if (problemTextPanelShown)
+				{ problemTextPanel.setY(0); }
+				else
+				{ problemTextPanel.setY(newScreenY - 30); }
+
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
+				problemTextPanel.add(problemTextField);
+				problemTextPanel.add(problemTextFieldContent);
+
+				problemTextPanel.on("touchstart", function() {
+					flipProblemTextPanel(problemTextPanel);
+				});
+
+				problemTextPanel.on("mousedown", function() {
+					flipProblemTextPanel(problemTextPanel);
+				});
+			}
+
+			function drawResultText()
+			{
+				// Create problemText Field content.
+				resultTextFieldContent = new Kinetic.Text({
+					x: (newScreenX / 2) - 100,
+					y: (newBoundY / 2),
+					width: 200,
+					fontFamily: 'Arial',
+					fontSize: 24,
+					lineHeight: 1.2,
+					text: 'Click and Drag the Yellow Posts!',
+					align: 'center',
+					fill: 'white'
+				});
+			}
+
+			function drawGUI()
+			{
+				// Create kinetic stage.
+				stage = new Kinetic.Stage({
+					container: 'container',
+					width: newScreenX,
+					height: newScreenY,
+				});
+
+				// Create kinetic layer.
+				layer = new Kinetic.Layer();
+
+				// Create GUI Field
+				GUIField = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: newScreenX,
+					height: newScreenY,
+					fill: 'green',
+					stroke: 'black',
+					strokeWidth: 4
+				});
+			}
+
+			function refreshStates()
+			{
+				drawGUI();
+				generateStage();
+			}
+
+			//********************************************************************************************//
+			//Creation Methods
+			//********************************************************************************************//
+
+			function generateFencePosts()
+			{
+				// Create First Fencepost
+				NECorner = new Kinetic.Circle({
+					x: (9 * newScreenX / 10),
+					y: (4 * newBoundY / 10),
+					radius: scaling / 4,
+					fill: '#80650E',
+					stroke: 'black',
+					strokeWidth: 1,
+					draggable: false
+				});
+
+				// Create Second Fencepost
+				NWCorner = new Kinetic.Circle({
+					x: (7 * newScreenX / 10),
+					y: (4 * newBoundY / 10),
+					radius: scaling / 4,
+					fill: 'yellow',
+					stroke: 'black',
+					strokeWidth: scaling / 10.0,
+					draggable: true
+				});
+
+				// Create Third Fencepost
+				SWCorner = new Kinetic.Circle({
+					x: (7 * newScreenX / 10),
+					y: (6 * newBoundY / 10),
+					radius: scaling / 4,
+					fill: 'yellow',
+					stroke: 'black',
+					strokeWidth: scaling / 10.0,
+					draggable: true
+				});
+
+				// Create Fourth Fencepost
+				SECorner = new Kinetic.Circle({
+					x: (9 * newScreenX / 10),
+					y: (6 * newBoundY / 10),
+					radius: scaling / 4,
+					fill: '#80650E',
+					stroke: 'black',
+					strokeWidth: 1,
+					draggable: false
+				});
+
+				NWCorner.on("dragmove", function() {
+					NWCornerMoveCommand();
+				});
+
+				NWCorner.on("touchstart", function() {
+					oldX = NWCorner.getX();
+					oldY = NWCorner.getY();
+				});
+
+				NWCorner.on("mousedown", function() {
+					oldX = NWCorner.getX();
+					oldY = NWCorner.getY();
+				});
+
+				SWCorner.on("dragmove", function() {
+					SWCornerMoveCommand();
+				});
+
+				SWCorner.on("touchstart", function() {
+					oldX = SWCorner.getX();
+					oldY = SWCorner.getY();
+				});
+
+				SWCorner.on("mousedown", function() {
+					oldX = SWCorner.getX();
+					oldY = SWCorner.getY();
+				});
+
+				NECorner.on("touchstart", function() {
+					alert('This fencepost cannot be dragged as it must stay attached to the shed.');
+				});
+
+				NECorner.on("mousedown", function() {
+					alert('This fencepost cannot be dragged as it must stay attached to the shed.');
+				});
+
+				SECorner.on("touchstart", function() {
+					alert('This fencepost cannot be dragged as it must stay attached to the shed.');
+				});
+
+				SECorner.on("mousedown", function() {
+					alert('This fencepost cannot be dragged as it must stay attached to the shed.');
+				});
+			}
+
+			function generateBarn()
+			{
+				// Create Barn
+				Barn = new Kinetic.Rect({
+					x: (9 * newScreenX / 10),
+					y: (1 * newBoundY / 10),
+					width: (1 * newScreenX / 10),
+					height: (8 * newBoundY / 10),
+					fill: 'red',
+					stroke: 'black',
+					strokeWidth: 4
+				});
+			}
+
+			function generateFencing()
+			{
+				// Create Fencing
+				Fence = new Kinetic.Rect({
+					x: NWCorner.getX(),
+					y: NWCorner.getY(),
+					width: SECorner.getX() - NWCorner.getX(),
+					height: SECorner.getY() - NWCorner.getY(),
+					fill: '#00C928',
+					stroke: '#80650E',
+					strokeWidth: 12
+				});
+			}
+
+			function generateStage()
+			{
+				layer.add(GUIField);
+				layer.add(Fence);
+				layer.add(NECorner);
+				layer.add(NWCorner);
+				layer.add(SWCorner);
+				layer.add(SECorner);
+				layer.add(Barn);
+				layer.add(resultTextFieldContent);
+				layer.add(problemTextPanel);
+				stage.add(layer);
+			}
+
+			//********************************************************************************************//
+			//Control Methods
+			//********************************************************************************************//
+
+			function NWCornerMoveCommand()
+			{
+				if (NWCorner.getX() < newScreenX / 10)
+				{ NWCorner.setX(newScreenX / 10); }
+				if (NWCorner.getX() > 9 * newScreenX / 10)
+				{ NWCorner.setX(9 * newScreenX / 10); }
+				if (NWCorner.getY() < newBoundY / 10)
+				{ NWCorner.setY(newBoundY / 10); }
+				if (NWCorner.getY() > 9 * newBoundY / 10)
+				{ NWCorner.setY(9 * newBoundY / 10); }
+
+				perimeter = ((2 * (NECorner.getX() - NWCorner.getX())) + (SWCorner.getY() - NWCorner.getY())) / ((oldScreenY * 0.8) / 20);
+
+				if ((perimeter <= 36) && (NWCorner.getX() < NECorner.getX()) && (SWCorner.getY() > NWCorner.getY()))
+				{
+					oldX = NWCorner.getX();
+					oldY = NWCorner.getY();
+
+					oldPerimeter = Math.round(perimeter * 100.0) / 100.0;
+
+					NECorner.setY(NWCorner.getY());
+					SWCorner.setX(NWCorner.getX());
+
+					oldArea = Math.round(((NECorner.getX() - NWCorner.getX()) / ((oldScreenY * 0.8) / 20)) * ((SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20)));
+				}
+				else
+				{
+					var perimeterY = (SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20);
+					var potentialX = ((36 - perimeterY) / 2);
+
+					if ((potentialX > 0) && (NWCorner.getX() < NECorner.getX()) && (SWCorner.getY() > NWCorner.getY()))
+					{
+						NWCorner.setX(NECorner.getX() - (potentialX * ((oldScreenY * 0.8) / 20)));
+
+						oldX = NWCorner.getX();
+						oldY = NWCorner.getY();
+
+						oldPerimeter = 36;
+
+						NECorner.setY(NWCorner.getY());
+						SWCorner.setX(NWCorner.getX());
+
+						oldArea = Math.round(((NECorner.getX() - NWCorner.getX()) / ((oldScreenY * 0.8) / 20)) * ((SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20)));
+					}
+					else
+					{
+						NWCorner.setX(oldX);
+						NWCorner.setY(oldY);
+					}
+				}
+				resultTextFieldContent.setText("Perimeter:\n" + oldPerimeter + " ft\n\nArea:\n" + oldArea + " ft\u00B2");
+				resultTextFieldContent.setX(((NECorner.getX() + NWCorner.getX()) / 2) - 95);
+				resultTextFieldContent.setY(((SWCorner.getY() + NWCorner.getY()) / 2) - 68);
+				drawFencing();
+			}
+
+			function SWCornerMoveCommand()
+			{
+				if (SWCorner.getX() < newScreenX / 10)
+				{ SWCorner.setX(newScreenX / 10); }
+				if (SWCorner.getX() > 9 * newScreenX / 10)
+				{ SWCorner.setX(9 * newScreenX / 10); }
+				if (SWCorner.getY() < newBoundY / 10)
+				{ SWCorner.setY(newBoundY / 10); }
+				if (SWCorner.getY() > 9 * newBoundY / 10)
+				{ SWCorner.setY(9 * newBoundY / 10); }
+
+				perimeter = ((2 * (SECorner.getX() - SWCorner.getX())) + (SWCorner.getY() - NWCorner.getY())) / ((oldScreenY * 0.8) / 20);
+
+				if ((perimeter <= 36) && (SWCorner.getX() < SECorner.getX()) && (SWCorner.getY() > NWCorner.getY()))
+				{
+					oldX = SWCorner.getX();
+					oldY = SWCorner.getY();
+
+					oldPerimeter = Math.round(perimeter * 100.0) / 100.0;
+
+					SECorner.setY(SWCorner.getY());
+					NWCorner.setX(SWCorner.getX());
+
+					oldArea = Math.round(((SECorner.getX() - SWCorner.getX()) / ((oldScreenY * 0.8) / 20)) * ((SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20)));
+				}
+				else
+				{
+					var perimeterY = (SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20);
+					var potentialX = ((36 - perimeterY) / 2);
+
+					if ((potentialX > 0) && (SWCorner.getX() < SECorner.getX()) && (SWCorner.getY() > NWCorner.getY()))
+					{
+						SWCorner.setX(SECorner.getX() - (potentialX * ((oldScreenY * 0.8) / 20)));
+
+						oldX = SWCorner.getX();
+						oldY = SWCorner.getY();
+
+						oldPerimeter = 36;
+
+						SECorner.setY(SWCorner.getY());
+						NWCorner.setX(SWCorner.getX());
+
+						oldArea = Math.round(((SECorner.getX() - SWCorner.getX()) / ((oldScreenY * 0.8) / 20)) * ((SWCorner.getY() - NWCorner.getY()) / ((oldScreenY * 0.8) / 20)));
+					}
+					else
+					{
+						SWCorner.setX(oldX);
+						SWCorner.setY(oldY);
+					}
+				}
+				resultTextFieldContent.setText("Perimeter:\n" + oldPerimeter + " ft\n\nArea:\n" + oldArea + " ft\u00B2");
+				resultTextFieldContent.setX(((NECorner.getX() + NWCorner.getX()) / 2) - 95);
+				resultTextFieldContent.setY(((SWCorner.getY() + NWCorner.getY()) / 2) - 68);
+				drawFencing();
+			}
+
+			function flipProblemTextPanel(YourObject)
+			{
+				if (problemTextPanelShown)
+				{
+					problemTextPanelShown = false;
+					YourObject.setY(newScreenY - 30);
+				}
+				else
+				{
+					problemTextPanelShown = true;
+					YourObject.setY(00);
+				}
+				refreshStates();
+			}
+
+			function fixDeviceOrientation(tableList, chairList)
+			{
+				switch (oldOrientation)
+				{
+					case 0:
+					switch (newOrientation)
+					{
+						case 0:
+						// Nothing
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getY());
+							tableList[i].setY(tableList[i].getX());
+						}
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(tableList[i].getY());
+							tableList[i].setY(newScreenY - tableList[i].getX());
+						}
+						break;
+					}
+					break;
+
+					case 180:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case 180:
+						// Nothing
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - (oldScreenY - tableList[i].getY()));
+							tableList[i].setY(oldScreenX - tableList[i].getX());
+						}
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(oldScreenY - tableList[i].getY());
+							tableList[i].setY(newScreenY - (oldScreenX - tableList[i].getX()));
+						}
+						break;
+					}
+					break;
+
+					case -90:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(tableList[i].getY());
+							tableList[i].setY(oldScreenX - tableList[i].getX());
+						}
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getY());
+							tableList[i].setY(newScreenY - (oldScreenX - tableList[i].getX()));
+						}
+						break;
+
+						case -90:
+						// Nothing
+						break;
+
+						case 90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+					}
+					break;
+
+					case 90:
+					switch (newOrientation)
+					{
+						case 0:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(oldScreenY - tableList[i].getY());
+							tableList[i].setY(tableList[i].getX());
+						}
+						break;
+
+						case 180:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - (oldScreenY - tableList[i].getY()));
+							tableList[i].setY(newScreenY - tableList[i].getX());
+						}
+						break;
+
+						case -90:
+						for (var i = 0; i < tableList.length; i++)
+						{
+							tableList[i].setX(newScreenX - tableList[i].getX());
+							tableList[i].setY(newScreenY - tableList[i].getY());
+						}
+						break;
+
+						case 90:
+						// Nothing
+						break;
+					}
+					break;
+				}
+				for (var j = 0; j < chairList.length; j++)
+				{ warpToTable(chairList[j], tableList[j]); }
+			}
+
+			//********************************************************************************************//
+			//Control Events
+			//********************************************************************************************//
+
+			window.onresize = function(event)
+			{ reDraw(); }
+
+			//********************************************************************************************//
+			//Initialization Code
+			//********************************************************************************************//
+			initDraw();
+		</script>
+	</body>
+</html>
