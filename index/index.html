@@ -1,751 +1,150 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, minimal-ui" />
-		<style>
-			*
-			{
-				padding: 0;
-				margin: 0;
-				border: 0;
-			}
+		<!-- Meta Attributes -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
 
-			body
-			{
-				overflow: hidden;
-			}
+		<!-- Tab Heading Title -->
+		<title>Problems of the Week - Homepage</title>
 
-			#container
-			{
-				background-color: white;
-				display: inline-block;
-			}
-		</style>
+		<!-- Bootstrap Core CSS -->
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- Index Core CSS -->
+		<link href="css/index.css" rel="stylesheet">
+
+		<!-- IE Backward Compatibility -->
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
 	</head>
-	<body>
-		<div id="container"></div>
-		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v5.1.0.min.js"></script>
-		<script src="shapes.js"></script>
-		<script defer="defer">
-			//********************************************************************************************//
-			//Data Storage
-			//********************************************************************************************//
 
-			var newScreenX;
-			var newScreenY;
-			var scaling;
-			var stage;
-			var layer;
-			var GUIField;
-			var img1;
-			var imgButton1;
-
-			//********************************************************************************************//
-			//Drawing Methods
-			//********************************************************************************************//
-
-			// put the paths to your images in imageURLs
-			var imageURLs=[];
-			imageURLs.push("http://i.imgur.com/q9gPURG.png");
-			imageURLs.push("http://i.imgur.com/o6BYYHE.png");
-			imageURLs.push("http://i.imgur.com/0jrQpYE.jpg");
-			var imagesOK=0;
-			var imgs=[];
-
-			function loadAllImages(callback){
-				for (var i=0; i<imageURLs.length; i++)
-				{
-					var img = new Image();
-					imgs.push(img);
-					img.onload = function()
-					{
-						imagesOK++;
-						if (imagesOK>=imageURLs.length )
-						{ callback(); }
-					};
-					//img.onerror=function() {alert("image load failed"); }
-					img.crossOrigin="anonymous";
-					img.src = imageURLs[i];
-				}
-			}
-
-			function initDraw()
-			{
-				// Data Storage
-				newScreenX = (window.innerWidth);
-				newScreenY = (window.innerHeight);
-
-				scaling = Math.min(newScreenX, newScreenY) / 12.5;
-				
-				// Create kinetic stage.
-				stage = new Kinetic.Stage({
-					container: 'container',
-					width: newScreenX,
-					height: newScreenY,
-				});
-
-				// Create kinetic layer.
-				layer = new Kinetic.Layer();
-				stage.add(layer);
-
-
-				// Create GUI Field
-				GUIField = new Kinetic.Rect({
-					x: 0,
-					y: 0,
-					width: newScreenX,
-					height: newScreenY,
-					fill: '#EEEEEE',
-					stroke: 'black',
-					strokeWidth: 4
-				});
-
-				//Text
-				{
-					// Create Text Content.
-					textContent = new Kinetic.Text({
-						x: 5,
-						y: 10,
-						fontFamily: 'Times New Roman',
-						fontSize: 36,
-						text: 'The Math Forum @ Drexel',
-						fill: 'black',
-						width: newScreenX - 10,
-						align: 'center'
-					});
-				}
-
-				// Buttons
-				{
-					if (newScreenX >= newScreenY)
-					{
-						// Create First Button
-						imgButton1 = new Kinetic.Image({
-							x: 5,
-							y: 10 + (newScreenY / 10),
-							image: imgs[0],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							scale: 0.01,
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton2 = new Kinetic.Image({
-							x: 5,
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: imgs[1],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton3 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 25) / 4),
-							y: 10 + (newScreenY / 10),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton4 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 25) / 4),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton5 = new Kinetic.Image({
-							x: 15 + ((newScreenX - 25) / 2),
-							y: 10 + (newScreenY / 10),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton6 = new Kinetic.Image({
-							x: 15 + ((newScreenX - 25) / 2),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton7 = new Kinetic.Image({
-							x: 20 + (3 * (newScreenX - 25) / 4),
-							y: 10 + (newScreenY / 10),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton8 = new Kinetic.Image({
-							x: 20 + (3 * (newScreenX - 25) / 4),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: imgs[2],
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-					}
-					else
-					{
-						imgButton1 = new Kinetic.Image({
-							x: 5,
-							y: 10 + (newScreenY / 10),
-							image: imgs[0],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton2 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 10 + (newScreenY / 10),
-							image: imgs[1],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton3 = new Kinetic.Image({
-							x: 5,
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 4),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton4 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 4),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton5 = new Kinetic.Image({
-							x: 5,
-							y: 20 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 2),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton6 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 20 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 2),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton7 = new Kinetic.Image({
-							x: 5,
-							y: 25 + (newScreenY / 10) + (3 * ((9 * newScreenY / 10) - 30) / 4),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						imgButton8 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 25 + (newScreenY / 10) + (3 * ((9 * newScreenY / 10) - 30) / 4),
-							image: imgs[2],
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-					}
-				}
-
-				// Functionality
-				{
-					imgButton1.on("touchstart", function() {
-						window.location = "./tables.html";
-					});
-
-					imgButton1.on("mousedown", function() {
-						window.location = "./tables.html";
-					});
-
-					imgButton2.on("touchstart", function() {
-						window.location = "./fencing.html";
-					});
-
-					imgButton2.on("mousedown", function() {
-						window.location = "./fencing.html";
-					});
-
-					imgButton3.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton3.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton4.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton4.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton5.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton5.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton6.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton6.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton7.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton7.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton8.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton8.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-				}
-
-				// Layers
-				{
-					layer.add(GUIField);
-					layer.add(textContent);
-					layer.add(imgButton1);
-					layer.add(imgButton2);
-					layer.add(imgButton3);
-					layer.add(imgButton4);
-					layer.add(imgButton5);
-					layer.add(imgButton6);
-					layer.add(imgButton7);
-					layer.add(imgButton8);
-					layer.draw();
-				}
-			}
-
-			function reDraw()
-			{
-				// Data Storage
-				newScreenX = (window.innerWidth);
-				newScreenY = (window.innerHeight);
-
-				scaling = Math.min(newScreenX, newScreenY) / 12.5;
-				
-				// Create kinetic stage.
-				stage = new Kinetic.Stage({
-					container: 'container',
-					width: newScreenX,
-					height: newScreenY,
-				});
-
-				// Create kinetic layer.
-				layer = new Kinetic.Layer();
-
-				// Create GUI Field
-				GUIField = new Kinetic.Rect({
-					x: 0,
-					y: 0,
-					width: newScreenX,
-					height: newScreenY,
-					fill: '#EEEEEE',
-					stroke: 'black',
-					strokeWidth: 4
-				});
-
-				//Text
-				{
-					// Create Text Content.
-					textContent = new Kinetic.Text({
-						x: 5,
-						y: 10,
-						fontFamily: 'Times New Roman',
-						fontSize: 36,
-						text: 'The Math Forum @ Drexel',
-						fill: 'black',
-						width: newScreenX - 10,
-						align: 'center'
-					});
-				}
-
-				// Buttons
-				{
-					if (newScreenX >= newScreenY)
-					{
-						// Create First Button
-						img1 = new Image();
-						img1.src = './tables.png'
-
-						imgButton1 = new Kinetic.Image({
-							x: 5,
-							y: 10 + (newScreenY / 10),
-							image: img1,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Second Button
-						img2 = new Image();
-						img2.src = './fencing.png'
-
-						imgButton2 = new Kinetic.Image({
-							x: 5,
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: img2,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Third Button
-						img3 = new Image();
-						img3.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton3 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 25) / 4),
-							y: 10 + (newScreenY / 10),
-							image: img3,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Fourth Button
-						img4 = new Image();
-						img4.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton4 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 25) / 4),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: img4,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Fifth Button
-						img5 = new Image();
-						img5.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton5 = new Kinetic.Image({
-							x: 15 + ((newScreenX - 25) / 2),
-							y: 10 + (newScreenY / 10),
-							image: img5,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Sixth Button
-						img6 = new Image();
-						img6.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton6 = new Kinetic.Image({
-							x: 15 + ((newScreenX - 25) / 2),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: img6,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Seventh Button
-						img7 = new Image();
-						img7.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton7 = new Kinetic.Image({
-							x: 20 + (3 * (newScreenX - 25) / 4),
-							y: 10 + (newScreenY / 10),
-							image: img7,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Eighth Button
-						img8 = new Image();
-						img8.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton8 = new Kinetic.Image({
-							x: 20 + (3 * (newScreenX - 25) / 4),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 20) / 2),
-							image: img8,
-							width: ((newScreenX - 25) / 4),
-							height: (((9 * newScreenY / 10) - 20) / 2),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-					}
-					else
-					{
-						// Create First Button
-						img1 = new Image();
-						img1.src = './tables.png'
-
-						imgButton1 = new Kinetic.Image({
-							x: 5,
-							y: 10 + (newScreenY / 10),
-							image: img1,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Second Button
-						img2 = new Image();
-						img2.src = './fencing.png'
-
-						imgButton2 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 10 + (newScreenY / 10),
-							image: img2,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Third Button
-						img3 = new Image();
-						img3.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton3 = new Kinetic.Image({
-							x: 5,
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 4),
-							image: img3,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Fourth Button
-						img4 = new Image();
-						img4.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton4 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 15 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 4),
-							image: img4,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Fifth Button
-						img5 = new Image();
-						img5.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton5 = new Kinetic.Image({
-							x: 5,
-							y: 20 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 2),
-							image: img5,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Sixth Button
-						img6 = new Image();
-						img6.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton6 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 20 + (newScreenY / 10) + (((9 * newScreenY / 10) - 30) / 2),
-							image: img6,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Seventh Button
-						img7 = new Image();
-						img7.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton7 = new Kinetic.Image({
-							x: 5,
-							y: 25 + (newScreenY / 10) + (3 * ((9 * newScreenY / 10) - 30) / 4),
-							image: img7,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-
-						// Create Eighth Button
-						img8 = new Image();
-						img8.src = 'http://cyurap.com/img/no-image.jpg'
-
-						imgButton8 = new Kinetic.Image({
-							x: 10 + ((newScreenX - 15) / 2),
-							y: 25 + (newScreenY / 10) + (3 * ((9 * newScreenY / 10) - 30) / 4),
-							image: img8,
-							width: ((newScreenX - 15) / 2),
-							height: (((9 * newScreenY / 10) - 30) / 4),
-							stroke: 'black',
-							strokeWidth: 2
-						});
-					}
-				}
-
-				// Functionality
-				{
-					imgButton1.on("touchstart", function() {
-						window.location = "./tables.html";
-					});
-
-					imgButton1.on("mousedown", function() {
-						window.location = "./tables.html";
-					});
-
-					imgButton2.on("touchstart", function() {
-						window.location = "./fencing.html";
-					});
-
-					imgButton2.on("mousedown", function() {
-						window.location = "./fencing.html";
-					});
-
-					imgButton3.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton3.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton4.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton4.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton5.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton5.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton6.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton6.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton7.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton7.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton8.on("touchstart", function() {
-						alert("Invalid selection.");
-					});
-
-					imgButton8.on("mousedown", function() {
-						alert("Invalid selection.");
-					});
-				}
-
-				// Layers
-				{
-					layer.add(GUIField);
-					layer.add(textContent);
-					layer.add(imgButton1);
-					layer.add(imgButton2);
-					layer.add(imgButton3);
-					layer.add(imgButton4);
-					layer.add(imgButton5);
-					layer.add(imgButton6);
-					layer.add(imgButton7);
-					layer.add(imgButton8);
-					stage.add(layer);
-				}
-			}
-
-			//********************************************************************************************//
-			//Control Methods
-			//********************************************************************************************//
-
-
-
-			//********************************************************************************************//
-			//Control Events
-			//********************************************************************************************//
-
-			window.onresize = function(event)
-			{ loadAllImages(reDraw); }
-
-			//********************************************************************************************//
-			//Initialization Code
-			//********************************************************************************************//
-			// fully load every image, then call the start function
-			loadAllImages(initDraw);
-		</script>
+	<body onload="begin()">
+		<!-- Modal -->
+		<div class="modal fade" id="techNotesModal" tabindex="-1" role="dialog" aria-labelledby="techNotesModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">&times;</span>
+							<span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title" id="techNotesModalLabel">Tech Notes</h4>
+					</div>
+					<div class="modal-body">
+						<b>Changelog:</b>
+						<ul>
+							<li>Alpha v0.31 (16-Sep-14; 9:52PM): Added two different result displays.</li>
+							<li>Alpha v0.3 (16-Sep-14; 9:28PM): </li>
+							<ul>
+								<li>Added formatting buttons for one-click color!</li>
+								<li>Added buttons to facilitate copying of commands into the game.</li>
+							</ul>
+							<li>Alpha 0.2 (11-Sep-14, 11:41AM): Uses cookies to memorize last entries.</li>
+							<li>Alpha 0.11 (10-Sep-14, 10:40PM): Contrast changes to outcome box, credits text.</li>
+							<li>Alpha 0.1 (10-Sep-14, 8:50PM): First working copy.</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="site-wrapper">
+			<div class="site-wrapper-inner">
+				<div class="cover-container">
+
+					<!-- Site Page Header Content -->
+					<div class="masthead clearfix">
+						<div class="inner">
+							<h2 class="masthead-brand">The Math Forum @ Drexel</h2>
+							<ul class="nav masthead-nav">
+								<li>
+									<a href="http://mathforum.org/"><button type="button" class="btn btn-default">Math Forum</button></a>
+								</li>
+								<li>
+									<div class="btn-group">
+										<button type="button" class="btn btn-default">Login</button>
+										<button type="button" class="btn btn-primary">Register</button>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<!-- Site Page Body Content -->
+
+					<div class="inner cover">
+						<p>
+							<a href="http://admin.excite.drexel.edu/mathforum/tables.html">
+								<button type="button" class="btn btn-default btn-block custom-btn">
+									<img src="http://i.imgur.com/q9gPURG.png" class="img-thumbnail img-default" alt="Responsive image">
+									<div>
+										<h3>The Teddy Bears' Banquet</h3>
+										<h4>Problem No. #4651</h4>
+										<div class="btn btn-primary btn-block">Go to Problem!</div>
+									</div>
+								</button>
+							</a>
+						</p>
+						<p>
+							<a href="http://admin.excite.drexel.edu/mathforum/fencing.html">
+								<button type="button" class="btn btn-default btn-block custom-btn">
+									<img src="http://i.imgur.com/o6BYYHE.png" class="img-thumbnail img-default" alt="Responsive image">
+									<div>
+										<h3>Building Fences</h3>
+										<h4>Problem No. #998</h4>
+										<div class="btn btn-primary btn-block">Go to Problem!</div>
+									</div>
+								</button>
+							</a>
+						</p>
+						<p>
+							<a href="http://admin.excite.drexel.edu/mathforum/panels.html">
+								<button type="button" class="btn btn-default btn-block custom-btn">
+									<img src="http://i.imgur.com/0jrQpYE.png" class="img-thumbnail img-default" alt="Responsive image">
+									<div>
+										<h3>Chelsea's Number Puzzle</h3>
+										<h4>Problem No. #4603</h4>
+										<div class="btn btn-primary btn-block">Go to Problem!</div>
+									</div>
+								</button>
+							</a>
+						</p>
+					</div>
+
+					<!-- Site Page Footer Content -->
+					<div class="mastfoot">
+						<div class="inner">
+							<p>
+								<b>Disclaimer:</b> This web application makes use of source materials by the <a href="http://jquery.com/">jQuery foundation</a> and <a href="http://getbootstrap.com/">Twitter Bootstrap</a>.
+							</p>
+							<p>
+								Copyright © 2014 by <a href="http://drexel.edu/excite/initiatives/applab/">App Lab - Drexel ExCITe Center</a>. Released under <a href="http://opensource.org/licenses/MIT">MIT License</a>.
+							</p>
+						</div>
+					</div>
+
+					<!-- End of Content -->
+				</div>
+			</div>
+		</div>
+
+		<!-- jQuery Library -->
+		<script src="jquery/1.11.1/jquery.min.js"></script>
+
+		<!-- Bootstrap Core JQuery -->
+		<script src="bootstrap/js/bootstrap.min.js"></script>
+
+		<!-- Index Core JQuery -->
+		<script src="jquery/index.js"></script>
 	</body>
 </html>
