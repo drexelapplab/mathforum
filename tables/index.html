@@ -118,22 +118,14 @@
 				drawCounterText();
 				drawTableToggle();
 
-				if ((typeof oldOrientation != 'undefined') && (newOrientation != oldOrientation))
-				{
-					modifyDeviceWindow(YourTables, YourChairs);
-					generateStage(stage, layer, GUIField, YourChairs, YourTables);
-				}
+				YourChairs = [];
+				YourTables = [];
+				if (tablePicker == 10)
+				{ generateCircularTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
 				else
-				{
-					YourChairs = [];
-					YourTables = [];
-					if (tablePicker == 10)
-					{ generateCircularTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
-					else
-					{ generateGridTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
-					generateStage(stage, layer, GUIField, YourChairs, YourTables);
-					getSnapTables(newScreenX, newBoundY, YourTables, null);
-				}
+				{ generateGridTables(tablePicker, newScreenX, newBoundY, YourChairs, YourTables); }
+				generateStage(stage, layer, GUIField, YourChairs, YourTables);
+				getSnapTables(newScreenX, newBoundY, YourTables, null);
 
 				oldOrientation = (window.orientation);
 
@@ -172,7 +164,8 @@
 					text: 'Tap here to view problem',
 					fill: 'white',
 					width: newScreenX - 5,
-					align: 'center'
+					align: 'center',
+					listening: false
 				});
 
 				// Create problemText Field
@@ -197,7 +190,8 @@
 					fontSize: 18,
 					lineHeight: 1.2,
 					text: '"The Teddy Bears" Banquet [Problem #4651]\n\nUrsinus Hotel is one of the world\'s few hotels just for bears. The tables in its banquet room are regular hexagons with room for one seat along each side. In other words, one table standing alone seats six bears.\n\nTo make more room for dancing at the Teddy Bears\' wedding banquet, the staff arranges the tables in a long row along one side of the room. When they connect two tables together, here\'s how the seating looks:\n\n    -  How many guests can sit at 10 tables?\n    -  How many guests can sit at 25 tables?\n    -  How many guests can sit at 100 tables?\n\nExplain how you found your answers and how you know you are right. Describe any patterns that helped you.\n\nExtra\n    - Use either words or numbers and symbols to write a rule for calculating the number of bears that can sit at any given number of tables.\n    -  How many tables would it take, arranged in one straight row, to seat 120 bears?',
-					fill: 'white'
+					fill: 'white',
+					draggable: true
 				});
 
 				if (problemTextPanelShown == false)
@@ -217,16 +211,20 @@
 					});
 				}
 
-				problemTextPanel.add(problemTextBar);
-				problemTextPanel.add(problemTextBarContent);
 				problemTextPanel.add(problemTextField);
 				problemTextPanel.add(problemTextFieldContent);
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
 
-				problemTextPanel.on("touchstart", function() {
+				problemTextFieldContent.on("dragmove", function() {
+					scrollProblemContent();
+				});
+
+				problemTextBar.on("touchstart", function() {
 					flipProblemTextPanel(problemTextPanel);
 				});
 
-				problemTextPanel.on("mousedown", function() {
+				problemTextBar.on("mousedown", function() {
 					flipProblemTextPanel(problemTextPanel);
 				});
 			}
@@ -806,7 +804,7 @@
 				for (var i = 0; i < snapPointsCount; i++)
 				{
 					var distance = getDistance(location, snapPoints[i]);
-					if ((distance <= (2 * scaling * Math.cos(Math.PI / 6))) && (distance <= shortestDistance))
+					if ((distance <= (scaling * Math.cos(Math.PI / 6))) && (distance <= shortestDistance))
 					{
 						shortestDistance = distance;
 						snapPoint = snapPoints[i];
@@ -829,7 +827,7 @@
 					{
 						for (var j = 0; j < tablePointsCount; j++)
 						{
-							if (getDistance(location, tablePoints[j]) <= (1.8 * scaling * Math.cos(Math.PI / 6)))
+							if (getDistance(location, tablePoints[j]) <= (2.0 * scaling * Math.cos(Math.PI / 6)))
 							{
 								selectedTable.setX(preLocation[0]);
 								selectedTable.setY(preLocation[1]);
@@ -870,6 +868,29 @@
 				else
 				{ tablePicker = 10; }
 				reDrawAll();
+			}
+
+			function scrollProblemContent()
+			{
+				if (problemTextFieldContent.getX() < 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getX() > 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getY() < ((-25) - (problemTextFieldContent.getHeight() - oldScreenY)))
+				{
+					problemTextFieldContent.setY((-25) - (problemTextFieldContent.getHeight() - oldScreenY));
+					problemTextFieldContent.setText('"The Teddy Bears" Banquet [Problem #4651]\n\nUrsinus Hotel is one of the world\'s few hotels just for bears. The tables in its banquet room are regular hexagons with room for one seat along each side. In other words, one table standing alone seats six bears.\n\nTo make more room for dancing at the Teddy Bears\' wedding banquet, the staff arranges the tables in a long row along one side of the room. When they connect two tables together, here\'s how the seating looks:\n\n    -  How many guests can sit at 10 tables?\n    -  How many guests can sit at 25 tables?\n    -  How many guests can sit at 100 tables?\n\nExplain how you found your answers and how you know you are right. Describe any patterns that helped you.\n\nExtra\n    - Use either words or numbers and symbols to write a rule for calculating the number of bears that can sit at any given number of tables.\n    -  How many tables would it take, arranged in one straight row, to seat 120 bears?');
+					layer.draw();
+				}
+
+				if (problemTextFieldContent.getY() > 55)
+				{
+					problemTextFieldContent.setY(55);
+					problemTextFieldContent.setText('"The Teddy Bears" Banquet [Problem #4651]\n\nUrsinus Hotel is one of the world\'s few hotels just for bears. The tables in its banquet room are regular hexagons with room for one seat along each side. In other words, one table standing alone seats six bears.\n\nTo make more room for dancing at the Teddy Bears\' wedding banquet, the staff arranges the tables in a long row along one side of the room. When they connect two tables together, here\'s how the seating looks:\n\n    -  How many guests can sit at 10 tables?\n    -  How many guests can sit at 25 tables?\n    -  How many guests can sit at 100 tables?\n\nExplain how you found your answers and how you know you are right. Describe any patterns that helped you.\n\nExtra\n    - Use either words or numbers and symbols to write a rule for calculating the number of bears that can sit at any given number of tables.\n    -  How many tables would it take, arranged in one straight row, to seat 120 bears?');
+					layer.draw();
+				}
 			}
 
 			function modifyDeviceWindow(tableList, chairList)

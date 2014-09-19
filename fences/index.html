@@ -147,7 +147,8 @@
 					text: 'Tap here to view problem',
 					fill: 'white',
 					width: newScreenX - 5,
-					align: 'center'
+					align: 'center',
+					listening: false
 				});
 
 				// Create problemText Field
@@ -171,8 +172,9 @@
 					fontFamily: 'Arial',
 					fontSize: 18,
 					lineHeight: 1.2,
-					text: 'Building Fences [Problem #998]\n\nWe went to the hardware store to buy picture hooks. We came home with thirty-six yards of fence material, because it was on sale. We decided to put the fencing around a rectangular garden that we have been planning. The twenty-foot side of our shed will be along one of the edges of the garden.\n\nI would like you to help us plan so that we can maximize the area of the garden. What is the largest possible area that can be enclosed by the fence? Please express your answer in square feet. In your explanation, be sure to include the length and width of the garden and describe how you solved the problem.\n\n    Extra: We will also need fenceposts to place at the corners and every four feet along the fence. How many fenceposts might we purchase?',
-					fill: 'white'
+					text: '"Building Fences [Problem #998]"\n\nWe went to the hardware store to buy picture hooks. We came home with thirty-six yards of fence material, because it was on sale. We decided to put the fencing around a rectangular garden that we have been planning. The twenty-foot side of our shed will be along one of the edges of the garden.\n\nI would like you to help us plan so that we can maximize the area of the garden. What is the largest possible area that can be enclosed by the fence? Please express your answer in square feet. In your explanation, be sure to include the length and width of the garden and describe how you solved the problem.\n\n    Extra: We will also need fenceposts to place at the corners and every four feet along the fence. How many fenceposts might we purchase?',
+					fill: 'white',
+					draggable: true
 				});
 
 				// Create problemText Panel Grouping
@@ -186,16 +188,20 @@
 				else
 				{ problemTextPanel.setY(newScreenY - 30); }
 
-				problemTextPanel.add(problemTextBar);
-				problemTextPanel.add(problemTextBarContent);
 				problemTextPanel.add(problemTextField);
 				problemTextPanel.add(problemTextFieldContent);
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
 
-				problemTextPanel.on("touchstart", function() {
+				problemTextFieldContent.on("dragmove", function() {
+					scrollProblemContent();
+				});
+
+				problemTextBar.on("touchstart", function() {
 					flipProblemTextPanel(problemTextPanel);
 				});
 
-				problemTextPanel.on("mousedown", function() {
+				problemTextBar.on("mousedown", function() {
 					flipProblemTextPanel(problemTextPanel);
 				});
 			}
@@ -212,7 +218,8 @@
 					lineHeight: 1.2,
 					text: 'Click and Drag the Yellow Posts!',
 					align: 'center',
-					fill: 'white'
+					fill: 'white',
+					listening: false
 				});
 			}
 
@@ -512,6 +519,29 @@
 					YourObject.setY(00);
 				}
 				refreshStates();
+			}
+
+			function scrollProblemContent()
+			{
+				if (problemTextFieldContent.getX() < 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getX() > 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getY() < ((-25) - (problemTextFieldContent.getHeight() - oldScreenY)))
+				{
+					problemTextFieldContent.setY((-25) - (problemTextFieldContent.getHeight() - oldScreenY));
+					problemTextFieldContent.setText('"Building Fences [Problem #998]"\n\nWe went to the hardware store to buy picture hooks. We came home with thirty-six yards of fence material, because it was on sale. We decided to put the fencing around a rectangular garden that we have been planning. The twenty-foot side of our shed will be along one of the edges of the garden.\n\nI would like you to help us plan so that we can maximize the area of the garden. What is the largest possible area that can be enclosed by the fence? Please express your answer in square feet. In your explanation, be sure to include the length and width of the garden and describe how you solved the problem.\n\n    Extra: We will also need fenceposts to place at the corners and every four feet along the fence. How many fenceposts might we purchase?');
+					layer.draw();
+				}
+
+				if (problemTextFieldContent.getY() > 55)
+				{
+					problemTextFieldContent.setY(55);
+					problemTextFieldContent.setText('"Building Fences [Problem #998]"\n\nWe went to the hardware store to buy picture hooks. We came home with thirty-six yards of fence material, because it was on sale. We decided to put the fencing around a rectangular garden that we have been planning. The twenty-foot side of our shed will be along one of the edges of the garden.\n\nI would like you to help us plan so that we can maximize the area of the garden. What is the largest possible area that can be enclosed by the fence? Please express your answer in square feet. In your explanation, be sure to include the length and width of the garden and describe how you solved the problem.\n\n    Extra: We will also need fenceposts to place at the corners and every four feet along the fence. How many fenceposts might we purchase?');
+					layer.draw();
+				}
 			}
 
 			function fixDeviceOrientation(tableList, chairList)

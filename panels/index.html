@@ -226,7 +226,8 @@
 					text: 'Tap here to view problem',
 					fill: 'white',
 					width: oldScreenX - 5,
-					align: 'center'
+					align: 'center',
+					listening: false
 				});
 
 				// Create problemText Field
@@ -251,7 +252,8 @@
 					fontSize: 18,
 					lineHeight: 1.2,
 					text: '"Chelsea\'s Number Puzzle [Problem #4603]"\n\nChelsea is working on a number puzzle. She is trying to place the numbers 1 through 9 in the squares, using each number exactly once, so that the sum of the numbers in the horizontal row is equal to the sum of the numbers in the vertical column.\n\nSo far Chelsea has filled in three numbers.\n\n    -  Find all the numbers she can use in the center square (C) to solve the puzzle.\n    -  Explain how you found them and how you know you have found them all.\n    -  List the numbers for the square labeled f that will go with each solution for square C.\n\nExtra\n    - Starting with a blank puzzle grid and the same rules, what is the minimum possible sum of the row and column? What is the maximum possible sum of the row and column? Describe or show a possible puzzle solution for each.',
-					fill: 'white'
+					fill: 'white',
+					draggable: true
 				});
 
 				if (problemTextPanelShown == false)
@@ -271,16 +273,20 @@
 					});
 				}
 
-				problemTextPanel.add(problemTextBar);
-				problemTextPanel.add(problemTextBarContent);
 				problemTextPanel.add(problemTextField);
 				problemTextPanel.add(problemTextFieldContent);
+				problemTextPanel.add(problemTextBar);
+				problemTextPanel.add(problemTextBarContent);
 
-				problemTextPanel.on("touchstart", function() {
+				problemTextFieldContent.on("dragmove", function() {
+					scrollProblemContent();
+				});
+
+				problemTextBar.on("touchstart", function() {
 					toggleProblemText();
 				});
 
-				problemTextPanel.on("mousedown", function() {
+				problemTextBar.on("mousedown", function() {
 					toggleProblemText();
 				});
 			}
@@ -1058,6 +1064,29 @@
 					colSum = 19;
 				}
 				reDrawAll();
+			}
+
+			function scrollProblemContent()
+			{
+				if (problemTextFieldContent.getX() < 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getX() > 25)
+				{ problemTextFieldContent.setX(25); }
+
+				if (problemTextFieldContent.getY() < ((-25) - (problemTextFieldContent.getHeight() - oldScreenY)))
+				{
+					problemTextFieldContent.setY((-25) - (problemTextFieldContent.getHeight() - oldScreenY));
+					problemTextFieldContent.setText('"Chelsea\'s Number Puzzle [Problem #4603]"\n\nChelsea is working on a number puzzle. She is trying to place the numbers 1 through 9 in the squares, using each number exactly once, so that the sum of the numbers in the horizontal row is equal to the sum of the numbers in the vertical column.\n\nSo far Chelsea has filled in three numbers.\n\n    -  Find all the numbers she can use in the center square (C) to solve the puzzle.\n    -  Explain how you found them and how you know you have found them all.\n    -  List the numbers for the square labeled f that will go with each solution for square C.\n\nExtra\n    - Starting with a blank puzzle grid and the same rules, what is the minimum possible sum of the row and column? What is the maximum possible sum of the row and column? Describe or show a possible puzzle solution for each.');
+					layer.draw();
+				}
+
+				if (problemTextFieldContent.getY() > 55)
+				{
+					problemTextFieldContent.setY(55);
+					problemTextFieldContent.setText('"Chelsea\'s Number Puzzle [Problem #4603]"\n\nChelsea is working on a number puzzle. She is trying to place the numbers 1 through 9 in the squares, using each number exactly once, so that the sum of the numbers in the horizontal row is equal to the sum of the numbers in the vertical column.\n\nSo far Chelsea has filled in three numbers.\n\n    -  Find all the numbers she can use in the center square (C) to solve the puzzle.\n    -  Explain how you found them and how you know you have found them all.\n    -  List the numbers for the square labeled f that will go with each solution for square C.\n\nExtra\n    - Starting with a blank puzzle grid and the same rules, what is the minimum possible sum of the row and column? What is the maximum possible sum of the row and column? Describe or show a possible puzzle solution for each.');
+					layer.draw();
+				}
 			}
 
 			//********************************************************************************************//

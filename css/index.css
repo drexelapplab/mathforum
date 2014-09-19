@@ -2,6 +2,12 @@
  * Global
  */
 
+h1, h2, h3, h4, h5, h6
+{
+  word-wrap: break-all;
+  white-space: normal;
+}
+
 /* Links */
 a, a:focus, a:hover
 {
@@ -22,10 +28,6 @@ a, a:focus, a:hover
   width: 20%;
   display: inline-block;
   float: left;
-}
-
-.custom-btn {
-  min-width: 430px;
 }
 
 /*
